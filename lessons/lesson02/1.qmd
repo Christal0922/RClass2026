@@ -1,0 +1,1134 @@
+---
+title: "R语言与数据可视化 第2章：数据操作"
+subtitle: "面向数据科学专业的实践教学"
+author: "数据科学与大数据技术系"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    number-sections: true
+    theme: cerulean
+    highlight-style: ayu-dark
+execute:
+  warning: false
+  message: false
+  cache: true
+---
+
+## 课程概述 {#overview}
+
+::: {.callout-note}
+## 学习目标
+
+完成本章学习后，你将能够：
+
+- 掌握R语言基础数据结构的创建和操作
+- 熟练使用dplyr包的6个核心函数进行数据处理
+- 为后续ggplot2可视化准备整洁的数据
+- 建立从数据导入到可视化的完整工作流程
+:::
+
+本章将用2个课时（100分钟）学习R语言数据操作，重点是实践操作。考虑到大家有Python基础，我们会通过对比来帮助理解。
+
+## 第一课时：R语言数据结构与tidyverse入门 {#lesson1}
+
+### 环境准备 {#setup}
+
+首先加载本课程需要的R包：
+
+```{r}
+#| label: setup
+#| message: false
+
+# 安装包（如果还没安装的话）
+# install.packages(c("tidyverse", "palmerpenguins"))
+
+# 加载包
+library(tidyverse)
+library(palmerpenguins)
+
+# 设置中文输出
+options(pillar.sigfig = 3)
+```
+
+### R语言数据结构快速入门 {#data-structures}
+
+#### Python vs R：数据结构对比
+
+如果你熟悉Python，可以这样理解R的数据结构：
+
+| Python | R语言 | 用途 |
+|--------|-------|------|
+| list | vector（向量） | 存储同类型数据 |
+| dict | named vector | 键值对数据 |
+| pandas DataFrame | data.frame/tibble | 表格数据 |
+
+#### 创建向量（相当于Python的list）
+
+```{r}
+#| label: vectors
+
+# 数值向量
+成绩 <- c(85, 92, 78, 88, 95)
+print(成绩)
+
+# 字符向量  
+姓名 <- c("王小明", "李小红", "张小华", "陈小东", "刘小芳")
+print(姓名)
+
+# 命名向量（相当于Python的字典）
+学生成绩 <- c(王小明 = 85, 李小红 = 92, 张小华 = 78)
+print(学生成绩)
+```
+
+#### 创建数据框（相当于pandas DataFrame）
+
+```{r}
+#| label: dataframe
+
+# 传统方式
+学生数据1 <- data.frame(
+  学号 = 1:5,
+  姓名 = c("王小明", "李小红", "张小华", "陈小东", "刘小芳"),
+  数学 = c(85, 92, 78, 88, 95),
+  英语 = c(80, 85, 90, 82, 88)
+)
+
+# 现代方式（推荐）- 使用tibble
+学生数据2 <- tibble(
+  学号 = 1:5,
+  姓名 = c("王小明", "李小红", "张小华", "陈小东", "刘小芳"), 
+  数学 = c(85, 92, 78, 88, 95),
+  英语 = c(80, 85, 90, 82, 88),
+  班级 = c("一班", "二班", "一班", "二班", "一班")
+)
+
+print(学生数据2)
+```
+
+### 查看数据的常用函数 {#explore-data}
+
+```{r}
+#| label: explore
+
+# 查看数据结构（类似Python的df.info()）
+glimpse(学生数据2)
+
+# 查看前几行（类似Python的df.head()）
+head(学生数据2, 3)
+
+# 统计摘要（类似Python的df.describe()）
+summary(学生数据2)
+```
+
+### 管道操作符：让代码更易读 {#pipe}
+
+这是R语言最重要的特色之一！
+
+```{r}
+#| label: pipe-demo
+
+# Python风格（嵌套函数，难读）
+结果1 <- head(arrange(学生数据2, desc(数学)), 3)
+
+# R管道风格（从左到右，易读）
+结果2 <- 学生数据2 %>%
+  arrange(desc(数学)) %>%
+  head(3)
+
+print(结果2)
+```
+
+::: {.callout-tip}
+## 管道操作符 `%>%` 的理解
+
+- 把左边的结果传递给右边的函数
+- 相当于Python中的方法链：`df.sort_values().head()`
+- 让代码更符合人类思维：先做什么，再做什么
+:::
+
+### Palmer Penguins数据集介绍 {#penguins-intro}
+
+::: {.callout-important}
+## 数据集背景
+
+Palmer Penguins是现代数据科学教学中广泛使用的数据集，它记录了南极附近三个岛屿上三种企鹅的生物测量数据。这个数据集由Dr. Kristen Gorman在Palmer Station收集，是著名的iris数据集的现代替代品。
+
+**研究背景**：
+- 数据收集地点：南极洲Palmer群岛
+- 收集时间：2007-2009年
+- 研究目的：了解企鹅物种间的形态差异和栖息地选择
+
+**分析价值**：
+- 包含真实的缺失值，适合学习数据清理
+- 多维度变量：连续型、分类型变量俱全
+- 生态学意义：体现物种适应性和生物多样性
+:::
+
+让我们来探索这个数据集：
+
+```{r}
+#| label: penguins-explore
+
+# 查看企鹅数据集
+print(penguins)
+
+# 数据集基本信息
+glimpse(penguins)
+
+# 变量说明
+cat("变量解释：
+- species: 企鹅物种（阿德利Adelie、帽带Chinstrap、巴布亚Gentoo）
+- island: 栖息岛屿（比斯科Biscoe、德里姆Dream、托格森Torgersen）
+- bill_length_mm: 喙长（毫米）
+- bill_depth_mm: 喙深（毫米）
+- flipper_length_mm: 翼长（毫米）
+- body_mass_g: 体重（克）
+- sex: 性别
+- year: 观测年份")
+```
+
+### 实践练习1：数据探索 {#practice1}
+
+```{r}
+#| label: practice1
+
+# 基础数据探索
+penguins %>%
+  head(10)
+
+# 查看有多少种企鹅
+penguins %>%
+  count(species)
+
+# 查看数据分布在哪些岛屿
+penguins %>%
+  count(island)
+```
+
+### 第一课时课后练习 {#homework1}
+
+::: {.callout-note}
+## 练习题目
+
+请使用学到的知识完成以下练习：
+
+**练习1.1：创建数据**
+创建一个包含你和同学信息的tibble，包含姓名、年龄、专业、家乡四个变量，至少5行数据。
+
+**练习1.2：数据探索**
+使用企鹅数据集，完成以下任务：
+1. 查看数据集的维度（行数和列数）
+2. 查看每种企鹅的数量分布
+3. 使用`summary()`函数查看数值变量的统计摘要
+4. 使用管道操作符查看体重最大的前5只企鹅
+
+**练习1.3：管道操作**
+将以下嵌套代码改写为管道操作：
+```r
+head(arrange(filter(penguins, !is.na(body_mass_g)), desc(body_mass_g)), 10)
+```
+:::
+
+::: {.callout-note collapse="true"}
+## 练习1参考答案
+
+**练习1.1答案：**
+```{r}
+#| label: homework1-1
+#| eval: false
+
+同学信息 <- tibble(
+  姓名 = c("王小明", "李小红", "张小华", "陈小东", "刘小芳"),
+  年龄 = c(20, 21, 20, 22, 21),
+  专业 = c("数据科学", "数据科学", "大数据", "数据科学", "大数据"),
+  家乡 = c("北京", "上海", "广州", "深圳", "杭州")
+)
+print(同学信息)
+```
+
+**练习1.2答案：**
+```{r}
+#| label: homework1-2
+
+# 1. 数据集维度
+dim(penguins)
+cat("企鹅数据集有", nrow(penguins), "行，", ncol(penguins), "列")
+
+# 2. 企鹅数量分布
+penguins %>%
+  count(species, name = "数量")
+
+# 3. 数值变量统计摘要
+penguins %>%
+  select(where(is.numeric)) %>%
+  summary()
+
+# 4. 体重最大的前5只企鹅
+penguins %>%
+  filter(!is.na(body_mass_g)) %>%
+  arrange(desc(body_mass_g)) %>%
+  head(5)
+```
+
+**练习1.3答案：**
+```{r}
+#| label: homework1-3
+
+# 管道操作版本
+penguins %>%
+  filter(!is.na(body_mass_g)) %>%
+  arrange(desc(body_mass_g)) %>%
+  head(10)
+```
+:::
+
+---
+
+## 第二课时：dplyr数据操作核心技能 {#lesson2}
+
+### dplyr包简介 {#dplyr-intro}
+
+dplyr是数据操作的"瑞士军刀"，提供了6个核心函数：
+
+| 函数 | 作用 | Python pandas对应 |
+|------|------|-------------------|
+| `filter()` | 筛选行 | `df[df.column > value]` |
+| `select()` | 选择列 | `df[['col1', 'col2']]` |
+| `mutate()` | 创建/修改列 | `df['new_col'] = ...` |
+| `arrange()` | 排序 | `df.sort_values()` |
+| `group_by()` | 分组 | `df.groupby()` |
+| `summarise()` | 汇总统计 | `df.agg()` |
+
+### filter()：筛选数据行 {#filter}
+
+**分析目的**：我们想要研究不同条件下企鹅的特征，首先需要筛选出符合条件的观测数据。
+
+```{r}
+#| label: filter-demo
+
+# 筛选阿德利企鹅
+penguins %>%
+  filter(species == "Adelie") %>%
+  head()
+
+# 多条件筛选：体重大于4000g的阿德利企鹅
+penguins %>%
+  filter(species == "Adelie" & body_mass_g > 4000) %>%
+  head()
+
+# 筛选多个物种
+penguins %>%
+  filter(species %in% c("Adelie", "Chinstrap")) %>%
+  count(species)
+
+# 排除缺失值
+penguins %>%
+  filter(!is.na(body_mass_g)) %>%
+  nrow()
+```
+
+::: {.callout-important}
+## 常用筛选条件
+
+- `==` 等于
+- `!=` 不等于  
+- `>`, `<`, `>=`, `<=` 大小比较
+- `%in%` 包含在列表中
+- `is.na()` 是否为缺失值
+- `!is.na()` 不是缺失值
+- `&` 逻辑与
+- `|` 逻辑或
+:::
+
+### select()：选择数据列 {#select}
+
+**分析目的**：从众多变量中选择我们关心的变量，简化数据结构，提高分析效率。
+
+```{r}
+#| label: select-demo
+
+# 选择基本的物种和体型信息
+penguins %>%
+  select(species, island, body_mass_g) %>%
+  head()
+
+# 选择一范围的列
+penguins %>%
+  select(species:bill_depth_mm) %>%
+  head()
+
+# 使用辅助函数选择所有喙部测量数据
+penguins %>%
+  select(species, starts_with("bill")) %>%
+  head()
+
+# 排除不需要的列（如年份）
+penguins %>%
+  select(-year, -sex) %>%
+  head()
+```
+
+::: {.callout-tip}
+## select()辅助函数
+
+- `starts_with("前缀")` 以某字符开头的列
+- `ends_with("后缀")` 以某字符结尾的列  
+- `contains("包含")` 包含某字符的列
+- `everything()` 所有列
+- `where(is.numeric)` 选择数值型列
+:::
+
+### mutate()：创建和修改列 {#mutate}
+
+**分析目的**：基于现有数据创建新的分析指标，如体重指数、体型分类等，为深入分析做准备。
+
+```{r}
+#| label: mutate-demo
+
+# 创建新的分析指标
+penguins %>%
+  mutate(
+    # 体重转换为千克，便于理解
+    体重_kg = round(body_mass_g / 1000, 2),
+    # 计算体型指数（体重/翼长比例）
+    体型指数 = round(body_mass_g / flipper_length_mm, 2),
+    # 创建体型分类
+    体型 = if_else(body_mass_g > 4500, "大型", "中小型")
+  ) %>%
+  select(species, body_mass_g, 体重_kg, 体型指数, 体型) %>%
+  head()
+
+# 复杂条件分类：为生态学研究创建精细分类
+penguins %>%
+  mutate(
+    体重等级 = case_when(
+      body_mass_g > 5500 ~ "超大型",
+      body_mass_g > 4500 ~ "大型",
+      body_mass_g > 4000 ~ "中型", 
+      body_mass_g > 3500 ~ "小型",
+      TRUE ~ "超小型"  # 默认情况
+    )
+  ) %>%
+  count(species, 体重等级) %>%
+  arrange(species, desc(体重等级))
+```
+
+### arrange()：数据排序 {#arrange}
+
+**分析目的**：通过排序找出极值情况，识别数据中的异常值或关键观测。
+
+```{r}
+#| label: arrange-demo
+
+# 找出最重的企鹅
+penguins %>%
+  arrange(desc(body_mass_g)) %>%
+  select(species, island, body_mass_g) %>%
+  head()
+
+# 找出最轻的企鹅  
+penguins %>%
+  arrange(body_mass_g) %>%
+  select(species, island, body_mass_g) %>%
+  head()
+
+# 多层排序：先按物种，再按体重降序
+# 这样可以看到每个物种内部的体重分布
+penguins %>%
+  arrange(species, desc(body_mass_g)) %>%
+  select(species, body_mass_g) %>%
+  head(15)
+```
+
+### group_by() + summarise()：分组统计 {#group-summarise}
+
+**分析目的**：这是生态学研究的核心！通过分组统计比较不同物种、不同性别企鹅的特征差异。
+
+```{r}
+#| label: group-summarise-demo
+
+# 总体统计：了解数据集整体情况
+penguins %>%
+  summarise(
+    企鹅总数 = n(),
+    平均体重 = round(mean(body_mass_g, na.rm = TRUE), 1),
+    体重标准差 = round(sd(body_mass_g, na.rm = TRUE), 1),
+    最大体重 = max(body_mass_g, na.rm = TRUE),
+    最小体重 = min(body_mass_g, na.rm = TRUE)
+  )
+
+# 按物种分组：比较不同物种的体型差异
+物种统计 <- penguins %>%
+  group_by(species) %>%
+  summarise(
+    数量 = n(),
+    平均体重 = round(mean(body_mass_g, na.rm = TRUE), 1),
+    平均翼长 = round(mean(flipper_length_mm, na.rm = TRUE), 1),
+    平均喙长 = round(mean(bill_length_mm, na.rm = TRUE), 1),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(平均体重))
+
+print(物种统计)
+
+# 多维度分组：研究性别和物种的交互作用
+性别物种统计 <- penguins %>%
+  filter(!is.na(sex)) %>%
+  group_by(species, sex) %>%
+  summarise(
+    数量 = n(),
+    平均体重 = round(mean(body_mass_g, na.rm = TRUE), 1),
+    体重差异 = round(max(body_mass_g, na.rm = TRUE) - min(body_mass_g, na.rm = TRUE), 1),
+    .groups = "drop"
+  ) %>%
+  arrange(species, sex)
+
+print(性别物种统计)
+```
+
+### 综合实战：完整的生态学数据分析 {#comprehensive-analysis}
+
+**研究问题**：不同岛屿上的企鹅是否表现出适应性差异？我们来分析岛屿环境对企鹅体型的影响。
+
+```{r}
+#| label: comprehensive-example
+
+# 完整的生态学分析流程
+岛屿适应性分析 <- penguins %>%
+  # 步骤1：数据清理（移除缺失数据）
+  filter(!is.na(sex), !is.na(body_mass_g), !is.na(bill_length_mm)) %>%
+  
+  # 步骤2：创建生态学指标
+  mutate(
+    体重_kg = round(body_mass_g / 1000, 2),
+    # 体质指数：体重与体长的比例，反映企鹅的"健壮程度"
+    体质指数 = round(body_mass_g / bill_length_mm, 2),
+    # 喙形指数：喙长深比，反映觅食适应性
+    喙形指数 = round(bill_length_mm / bill_depth_mm, 2),
+    # 体型等级分类
+    体型等级 = case_when(
+      body_mass_g >= quantile(body_mass_g, 0.75) ~ "大型",
+      body_mass_g >= quantile(body_mass_g, 0.25) ~ "中型",
+      TRUE ~ "小型"
+    )
+  ) %>%
+  
+  # 步骤3：多维度分组分析
+  group_by(island, species, sex) %>%
+  summarise(
+    企鹅数量 = n(),
+    平均体重 = round(mean(体重_kg), 2),
+    平均体质指数 = round(mean(体质指数), 2),
+    平均喙形指数 = round(mean(喙形指数), 2),
+    体重变异系数 = round(sd(体重_kg) / mean(体重_kg) * 100, 1),
+    .groups = "drop"
+  ) %>%
+  
+  # 步骤4：筛选有意义的组别（样本量≥5）
+  filter(企鹅数量 >= 5) %>%
+  
+  # 步骤5：按生态学意义排序
+  arrange(island, species, desc(平均体重))
+
+print(岛屿适应性分析)
+
+# 生态学解释
+cat("\n=== 生态学发现 ===\n")
+cat("从分析结果可以看出：\n")
+cat("1. 不同岛屿上同种企鹅可能存在体型差异\n") 
+cat("2. 性别二态性在不同物种中表现不同\n")
+cat("3. 体重变异系数反映了种群的稳定性\n")
+```
+
+### 为数据可视化准备数据 {#prepare-for-viz}
+
+**目标**：整理数据为下一章的可视化做准备，创建清晰的对比数据。
+
+```{r}
+#| label: prep-viz
+
+# 准备物种对比的可视化数据
+可视化数据1 <- penguins %>%
+  filter(!is.na(body_mass_g), !is.na(flipper_length_mm)) %>%
+  group_by(species) %>%
+  summarise(
+    数量 = n(),
+    平均体重 = round(mean(body_mass_g), 0),
+    平均翼长 = round(mean(flipper_length_mm), 0),
+    体重标准差 = round(sd(body_mass_g), 0),
+    翼长标准差 = round(sd(flipper_length_mm), 0)
+  )
+
+print(可视化数据1)
+
+# 准备性别差异的可视化数据
+可视化数据2 <- penguins %>%
+  filter(!is.na(sex), !is.na(body_mass_g)) %>%
+  group_by(species, sex) %>%
+  summarise(
+    平均体重 = round(mean(body_mass_g), 0),
+    数量 = n(),
+    .groups = "drop"
+  ) %>%
+  # 转换为宽格式，便于对比
+  pivot_wider(names_from = sex, values_from = c(平均体重, 数量))
+
+print(可视化数据2)
+
+# 快速预览：创建一个简单的对比图
+可视化数据1 %>%
+  ggplot(aes(x = reorder(species, 平均体重), y = 平均体重)) +
+  geom_col(fill = "steelblue", alpha = 0.7) +
+  geom_text(aes(label = paste0(平均体重, "g")), 
+            hjust = -0.1) +
+  coord_flip() +
+  labs(
+    title = "南极三种企鹅的平均体重对比",
+    subtitle = "基于Palmer企鹅数据集的分析",
+    x = "企鹅物种", 
+    y = "平均体重 (g)",
+    caption = "数据来源: Palmer Station, Antarctica"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5),
+        plot.subtitle = element_text(hjust = 0.5))
+```
+
+## 课堂练习 {#exercises}
+
+### 练习2.1：基础操作 {#exercise1}
+
+**任务背景**：作为生态学研究者，你需要分析Dream岛上的企鹅特征。
+
+```{r}
+#| label: exercise1
+#| eval: false
+
+# 1. 筛选出生活在Dream岛的企鹅，查看有多少只
+penguins %>%
+  filter(________) %>%
+  nrow()
+
+# 2. 选择物种、岛屿和所有身体测量数据
+penguins %>%
+  select(________)
+
+# 3. 创建一个新列：喙长宽比（bill_length_mm / bill_depth_mm）
+# 这个比例在鸟类学中称为"喙形指数"，反映觅食适应性
+penguins %>%
+  mutate(________)
+
+# 4. 按翼长降序排列，找出翼最长的10只企鹅
+penguins %>%
+  arrange(________) %>%
+  head(10)
+```
+
+### 练习2.2：分组统计 {#exercise2}
+
+**任务背景**：研究每个岛屿的企鹅群落结构。
+
+```{r}
+#| label: exercise2
+#| eval: false
+
+# 计算每个岛屿上各物种企鹅的数量和平均体重
+# 这有助于理解岛屿的承载能力和物种分布
+penguins %>%
+  group_by(________, ________) %>%
+  summarise(________)
+```
+
+### 练习答案 {#exercise-answers}
+
+::: {.callout-note collapse="true"}
+## 点击查看练习答案
+
+```{r}
+#| label: answers
+
+# 练习2.1答案
+# 1. Dream岛企鹅数量
+dream_count <- penguins %>%
+  filter(island == "Dream") %>%
+  nrow()
+cat("Dream岛共有", dream_count, "只企鹅")
+
+# 2. 选择相关列
+penguins %>%
+  select(species, island, bill_length_mm:body_mass_g) %>%
+  head()
+
+# 3. 创建喙形指数
+penguins %>%
+  mutate(喙形指数 = round(bill_length_mm / bill_depth_mm, 2)) %>%
+  select(species, bill_length_mm, bill_depth_mm, 喙形指数) %>%
+  head()
+
+# 4. 翼长排序
+penguins %>%
+  arrange(desc(flipper_length_mm)) %>%
+  select(species, island, flipper_length_mm) %>%
+  head(10)
+
+# 练习2.2答案
+岛屿群落结构 <- penguins %>%
+  filter(!is.na(body_mass_g)) %>%
+  group_by(island, species) %>%
+  summarise(
+    企鹅数量 = n(),
+    平均体重 = round(mean(body_mass_g), 1),
+    体重范围 = paste0(min(body_mass_g), "-", max(body_mass_g), "g"),
+    .groups = "drop"
+  ) %>%
+  arrange(island, desc(企鹅数量))
+
+print(岛屿群落结构)
+```
+:::
+
+## 拓展练习：mtcars数据集分析 {#mtcars-exercise}
+
+### 数据集介绍 {#mtcars-intro}
+
+::: {.callout-important}
+## mtcars数据集背景
+
+mtcars是R语言的经典内置数据集，包含1974年《Motor Trend》杂志中32款汽车的性能数据。这个数据集在汽车工程和统计学教学中广泛使用。
+
+**数据来源**：1974年Motor Trend US杂志
+**样本量**：32款汽车
+**变量数量**：11个性能指标
+
+**研究价值**：
+- 经典的回归分析案例数据
+- 包含连续型和分类型变量
+- 适合学习相关性分析和分组比较
+:::
+
+```{r}
+#| label: mtcars-intro
+
+# 查看mtcars数据集
+data(mtcars)
+glimpse(mtcars)
+
+# 变量说明
+cat("主要变量解释：
+- mpg: 燃油效率（英里/加仑）
+- cyl: 气缸数
+- hp: 马力
+- wt: 重量（1000磅）
+- gear: 前进档数
+- am: 传动类型（0=自动，1=手动）")
+
+# 添加汽车名称作为一列
+汽车数据 <- mtcars %>%
+  rownames_to_column("车型")
+
+head(汽车数据)
+```
+
+### 拓展练习题目 {#mtcars-tasks}
+
+::: {.callout-note}
+## 课后作业：汽车性能数据分析
+
+请使用mtcars数据集完成以下分析任务，这将帮助你巩固本章所学的所有技能。
+
+**任务1：数据探索（20分）**
+1. 查看数据集的基本信息（维度、结构、统计摘要）
+2. 找出燃油效率最高和最低的5款汽车
+3. 统计不同气缸数汽车的数量分布
+
+**任务2：数据变换（30分）**
+1. 创建燃油效率等级：高效（mpg≥25）、中等（15≤mpg<25）、低效（mpg<15）
+2. 计算功率重量比（hp/wt），这是衡量汽车性能的重要指标
+3. 将传动类型转换为中文：0="自动档"，1="手动档"
+
+**任务3：分组分析（30分）**
+1. 按气缸数分组，计算各组的平均燃油效率、平均马力、汽车数量
+2. 按传动类型分组，比较自动档和手动档汽车的性能差异
+3. 分析4缸、6缸、8缸汽车在燃油效率上的差异
+
+**任务4：综合应用（20分）**
+1. 找出每个气缸数组别中燃油效率最高的汽车
+2. 创建一个汇总表，显示不同档位数（gear）汽车的性能特征
+3. 为数据可视化准备一个整洁的数据框
+:::
+
+### 拓展练习参考答案 {#mtcars-answers}
+
+::: {.callout-note collapse="true"}
+## 点击查看参考答案
+
+```{r}
+#| label: mtcars-solution
+
+# 任务1：数据探索
+cat("=== 任务1：数据探索 ===\n")
+
+# 1. 基本信息
+cat("数据集维度：", dim(mtcars), "\n")
+glimpse(mtcars)
+
+# 2. 燃油效率极值
+高效汽车 <- mtcars %>%
+  rownames_to_column("车型") %>%
+  arrange(desc(mpg)) %>%
+  head(5) %>%
+  select(车型, mpg)
+
+低效汽车 <- mtcars %>%
+  rownames_to_column("车型") %>%
+  arrange(mpg) %>%
+  head(5) %>%
+  select(车型, mpg)
+
+cat("\n最高效的5款汽车：\n")
+print(高效汽车)
+cat("\n最低效的5款汽车：\n")
+print(低效汽车)
+
+# 3. 气缸数分布
+气缸分布 <- mtcars %>%
+  count(cyl, name = "汽车数量") %>%
+  mutate(百分比 = round(汽车数量/sum(汽车数量)*100, 1))
+
+cat("\n气缸数分布：\n")
+print(气缸分布)
+
+# 任务2：数据变换
+cat("\n=== 任务2：数据变换 ===\n")
+
+汽车分析数据 <- mtcars %>%
+  rownames_to_column("车型") %>%
+  mutate(
+    # 燃油效率等级
+    燃油等级 = case_when(
+      mpg >= 25 ~ "高效",
+      mpg >= 15 ~ "中等",
+      TRUE ~ "低效"
+    ),
+    # 功率重量比
+    功率重量比 = round(hp / wt, 2),
+    # 传动类型中文
+    传动类型 = if_else(am == 0, "自动档", "手动档")
+  )
+
+汽车分析数据 %>%
+  select(车型, mpg, 燃油等级, 功率重量比, 传动类型) %>%
+  head(10)
+
+# 任务3：分组分析
+cat("\n=== 任务3：分组分析 ===\n")
+
+# 1. 按气缸数分组
+气缸性能 <- 汽车分析数据 %>%
+  group_by(cyl) %>%
+  summarise(
+    汽车数量 = n(),
+    平均燃油效率 = round(mean(mpg), 2),
+    平均马力 = round(mean(hp), 1),
+    马力范围 = paste0(min(hp), "-", max(hp)),
+    .groups = "drop"
+  )
+
+cat("按气缸数分组分析：\n")
+print(气缸性能)
+
+# 2. 按传动类型分组
+传动性能 <- 汽车分析数据 %>%
+  group_by(传动类型) %>%
+  summarise(
+    汽车数量 = n(),
+    平均燃油效率 = round(mean(mpg), 2),
+    平均马力 = round(mean(hp), 1),
+    平均重量 = round(mean(wt), 2),
+    平均功率重量比 = round(mean(功率重量比), 2),
+    .groups = "drop"
+  )
+
+cat("\n按传动类型分组分析：\n")
+print(传动性能)
+
+# 3. 燃油效率差异分析
+燃油差异 <- 汽车分析数据 %>%
+  group_by(cyl) %>%
+  summarise(
+    燃油效率均值 = round(mean(mpg), 2),
+    燃油效率中位数 = round(median(mpg), 2),
+    燃油效率标准差 = round(sd(mpg), 2),
+    变异系数 = round(sd(mpg)/mean(mpg)*100, 1),
+    .groups = "drop"
+  )
+
+cat("\n不同气缸数汽车燃油效率差异：\n")
+print(燃油差异)
+
+# 任务4：综合应用
+cat("\n=== 任务4：综合应用 ===\n")
+
+# 1. 每组最高效汽车
+最高效汽车 <- 汽车分析数据 %>%
+  group_by(cyl) %>%
+  slice_max(mpg, n = 1) %>%
+  select(cyl, 车型, mpg, hp, 传动类型) %>%
+  arrange(cyl)
+
+cat("每个气缸组最高效汽车：\n")
+print(最高效汽车)
+
+# 2. 档位性能特征
+档位特征 <- 汽车分析数据 %>%
+  group_by(gear) %>%
+  summarise(
+    汽车数量 = n(),
+    平均燃油效率 = round(mean(mpg), 2),
+    平均马力 = round(mean(hp), 1),
+    手动档比例 = round(mean(am) * 100, 1),
+    .groups = "drop"
+  )
+
+cat("\n不同档位数汽车特征：\n")
+print(档位特征)
+
+# 3. 可视化数据准备
+可视化汽车数据 <- 汽车分析数据 %>%
+  select(车型, cyl, mpg, hp, wt, 燃油等级, 传动类型, 功率重量比) %>%
+  # 添加品牌信息
+  mutate(
+    品牌 = case_when(
+      str_detect(车型, "Merc") ~ "奔驰",
+      str_detect(车型, "Toyota") ~ "丰田", 
+      str_detect(车型, "Honda") ~ "本田",
+      str_detect(车型, "Mazda") ~ "马自达",
+      str_detect(车型, "Volvo") ~ "沃尔沃",
+      TRUE ~ "其他"
+    )
+  ) %>%
+  arrange(desc(mpg))
+
+cat("\n为可视化准备的数据（前10行）：\n")
+print(head(可视化汽车数据, 10))
+```
+:::
+
+## 常见错误与调试技巧 {#common-errors}
+
+### 数据操作中的常见错误 {#data-errors}
+
+#### 1. 忘记处理缺失值
+```{r}
+#| label: error1
+
+# 错误示例：计算会返回NA
+错误结果 <- penguins %>%
+  summarise(平均体重 = mean(body_mass_g))
+print(错误结果)
+
+# 正确做法：排除缺失值
+正确结果 <- penguins %>%
+  summarise(平均体重 = mean(body_mass_g, na.rm = TRUE))
+print(正确结果)
+```
+
+#### 2. 分组后忘记取消分组
+```{r}
+#| label: error2
+
+# 可能出问题的代码
+有问题的数据 <- penguins %>%
+  group_by(species) %>%
+  summarise(数量 = n())
+
+# 检查是否还有分组
+cat("分组信息：", class(有问题的数据), "\n")
+
+# 安全的做法：明确取消分组
+安全的数据 <- penguins %>%
+  group_by(species) %>%
+  summarise(数量 = n(), .groups = "drop")
+
+cat("分组信息：", class(安全的数据), "\n")
+```
+
+#### 3. 管道操作符使用错误
+```{r}
+#| label: error3
+#| eval: false
+
+# 错误：忘记使用管道操作符
+penguins 
+  filter(species == "Adelie")  # 这行不会执行！
+
+# 正确：使用管道操作符连接
+penguins %>%
+  filter(species == "Adelie")
+```
+
+#### 4. 变量名称错误
+```{r}
+#| label: error4
+#| eval: false
+
+# 错误：变量名拼写错误
+penguins %>%
+  select(speices)  # species拼写错误
+
+# 正确：检查变量名
+names(penguins)
+penguins %>%
+  select(species)
+```
+
+### 调试技巧 {#debugging-tips}
+
+::: {.callout-tip}
+## 数据分析调试技巧
+
+1. **逐步执行**：使用管道时，可以逐行执行检查中间结果
+2. **查看数据结构**：经常使用`glimpse()`和`head()`检查数据
+3. **检查变量名**：使用`names()`查看所有列名
+4. **处理缺失值**：计算前先用`is.na()`检查缺失情况
+5. **验证结果**：用`count()`、`summary()`验证结果的合理性
+:::
+
+```{r}
+#| label: debugging-demo
+
+# 调试示例：逐步检查数据处理过程
+调试过程 <- penguins %>%
+  filter(!is.na(body_mass_g))  # 第一步：移除缺失值
+
+cat("第一步后的数据量：", nrow(调试过程), "\n")
+
+调试过程 <- 调试过程 %>%
+  mutate(体重_kg = body_mass_g / 1000)  # 第二步：单位转换
+
+glimpse(调试过程)
+
+# 验证计算结果
+调试过程 %>%
+  select(body_mass_g, 体重_kg) %>%
+  head(3)
+```
+
+## 课程总结与展望 {#summary}
+
+### 核心知识点回顾 {#key-points}
+
+通过本章的学习，我们掌握了R语言数据操作的核心技能：
+
+1. **数据结构理解**：向量、数据框（tibble）的创建和操作
+2. **管道思维**：使用`%>%`构建清晰的数据处理流程  
+3. **六大核心函数**：
+   - `filter()` - 根据条件筛选观测
+   - `select()` - 选择需要的变量
+   - `mutate()` - 创建和修改变量
+   - `arrange()` - 按变量排序
+   - `group_by()` - 数据分组
+   - `summarise()` - 计算汇总统计
+
+### 数据科学工作流程 {#workflow}
+
+```{r}
+#| label: workflow-demo
+#| eval: false
+
+# 标准的数据分析工作流程
+最终结果 <- 原始数据 %>%
+  filter(数据清理条件) %>%        # 1. 数据清理
+  select(相关变量) %>%             # 2. 变量选择  
+  mutate(新变量 = 计算公式) %>%    # 3. 特征工程
+  group_by(分组变量) %>%           # 4. 数据分组
+  summarise(统计指标 = 计算函数) %>% # 5. 统计分析
+  arrange(排序条件) %>%            # 6. 结果排序
+  filter(结果筛选条件)             # 7. 最终筛选
+```
+
+### 实际应用价值 {#practical-value}
+
+本章学习的技能在实际数据科学工作中应用广泛：
+
+- **数据清理**：处理缺失值、异常值、重复值
+- **探索性数据分析**：快速了解数据分布和特征
+- **特征工程**：创建新变量，提取有用信息
+- **分组比较**：不同类别间的统计比较
+- **数据可视化准备**：为图表制作整理数据
+
+### 与Python pandas的对比总结 {#r-vs-python}
+
+| 操作类型 | R dplyr | Python pandas | 特点对比 |
+|---------|---------|---------------|----------|
+| 筛选 | `filter()` | `df[condition]` | R语法更直观 |
+| 选择 | `select()` | `df[['col']]` | R有更多辅助函数 |
+| 创建列 | `mutate()` | `df['new'] = ...` | R支持同时创建多列 |
+| 分组 | `group_by()` | `df.groupby()` | 功能相似，语法不同 |
+| 排序 | `arrange()` | `df.sort_values()` | R更简洁 |
+| 管道 | `%>%` | `.` method chaining | R的管道更清晰 |
+
+## 下章预告：ggplot2数据可视化 {#next-chapter}
+
+基于本章掌握的数据操作技能，第3章我们将学习：
+
+### 主要内容预览
+
+1. **ggplot2图形语法**：理解"图层语法"的核心概念
+2. **基础图表制作**：散点图、柱状图、箱线图、直方图
+3. **图形美化**：颜色、主题、标签的定制
+4. **分面显示**：多维度数据的可视化展示
+5. **交互式图表**：plotly包的基础应用
+
+### 技能衔接
+
+本章学到的数据整理技能将直接应用到可视化中：
+
+```{r}
+#| label: preview-viz
+#| eval: false
+
+# 本章的数据处理技能 + 下章的可视化技能
+可视化示例 <- penguins %>%
+  filter(!is.na(sex)) %>%                    # 本章：数据筛选
+  group_by(species, sex) %>%                 # 本章：数据分组  
+  summarise(平均体重 = mean(body_mass_g, na.rm = TRUE)) %>%  # 本章：统计汇总
+  ggplot(aes(x = species, y = 平均体重, fill = sex)) +      # 下章：ggplot2
+  geom_col(position = "dodge") +             # 下章：几何对象
+  theme_minimal()                            # 下章：主题美化
+```
+
+### 学习建议
+
+1. **多练习**：数据操作需要大量练习才能熟练
+2. **理解逻辑**：每个函数都有其特定用途和最佳应用场景  
+3. **组合使用**：实际工作中往往需要多个函数协同工作
+4. **关注细节**：注意缺失值处理、变量类型等细节问题
+
+---
+
+## 参考资源 {#references}
+
+### 官方文档
+- [dplyr官方文档](https://dplyr.tidyverse.org/)
+- [R for Data Science](https://r4ds.hadley.nz/)
+- [Palmer Penguins数据集](https://allisonhorst.github.io/palmerpenguins/)
+
+### 推荐书籍
+- 《R数据科学》（中文版）
+- 《ggplot2: Elegant Graphics for Data Analysis》
+- 《Advanced R》
+
+### 在线学习资源
+- [RStudio Primers](https://rstudio.cloud/learn/primers)
+- [DataCamp R课程](https://www.datacamp.com/courses/tech:r)
+- [Coursera数据科学专项课程](https://www.coursera.org/specializations/jhu-data-science)
+
+---
+
+*本课程由数据科学与大数据技术系精心编制，旨在培养学生的数据思维和实践技能。*
+
+*最后更新时间：`r Sys.Date()`*
