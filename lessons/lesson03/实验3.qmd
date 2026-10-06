@@ -1,0 +1,214 @@
+---
+title: "实验3：校园 App 使用时长的数据处理与分析"
+subtitle: "R语言与数据可视化"
+author: "从模拟记录到可解释的数据结论"
+date: today
+date-format: "YYYY年MM月DD日"
+
+format:
+  typst:
+    toc: false
+    toc-depth: 3
+    section-numbering: "1.1"
+    
+    # 页面设置
+    papersize: a4
+    margin:
+      x: 2.5cm
+      y: 2.5cm
+    
+    # 字体设置
+    mainfont: "Microsoft YaHei"
+    codefont: "JetBrains Mono"
+    fontsize: 11pt
+    linestretch: 1.4
+    
+    # 代码设置
+    code-fold: false
+    code-overflow: wrap
+    
+    # 图片设置
+    fig-align: center
+    fig-cap-location: bottom
+    
+    # 表格标题
+    tbl-cap-location: top
+
+lang: zh
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
+  
+knitr:
+  opts_chunk:
+    dev: ragg_png
+    dpi: 150
+---
+
+# 项目背景
+
+某班计划开展一次“手机使用与时间管理”主题讨论。班委希望了解：在微信、短视频、学习软件和游戏这四类 App 中，哪类使用时长较高？不同年级的短视频使用情况如何？这些数据能够支持什么建议？
+
+本实验使用 **24 名匿名学生某一天的模拟记录**。数据由随机数生成，用于练习完整的数据处理流程，**并非真实调查结果**。四类 App 的时长单位均为分钟，且只覆盖这四类应用；“四类总时长”不等于一天的全部手机使用时长。若改用真实记录，应先征得同意并去除可识别个人的信息。
+
+**分析主线：**明确问题 → 生成并读取数据 → 整理与汇总 → 长宽转换 → 保存结果 → 解释结论。
+
+# 项目目标
+
+完成实验后，你应能够：
+
+1. 用 `set.seed()`、`rnorm()`、`runif()` 生成可复现的练习数据，理解模拟数据的局限。
+2. 用 `write.csv()`、`read.csv()` 和 `save()`、`load()` 保存及读取数据。
+3. 联合使用 `select()`、`filter()`、`arrange()`、`mutate()`、`rename()`、`group_by()`、`summarise()` 回答一个具体问题。
+4. 使用 `pivot_longer()`、`pivot_wider()` 转换数据结构，并检查转换前后数值是否一致。
+5. 根据统计结果写出有证据、有边界的简短建议。
+
+# 实验准备
+
+将本文件保存为 `实验3.qmd`，用 RStudio 打开；第一次运行前，在 Console 安装尚未安装的包：
+
+```r
+install.packages(c("dplyr", "tidyr"))
+```
+
+加载实验3所需的 R 包
+
+```{r}
+library(dplyr)
+library(tidyr)
+```
+
+# 项目任务
+
+## 任务一：模拟记录、保存 CSV 
+
+APP_m_time存储了24名学生在不同APP的使用时长数据，为保护隐私，该数据框为模拟数据，请根据要求完成以下操作。
+
+(1) 读取实验3.RData数据
+```{r}
+load("D:/Project/Rproject/RClass2026/lessons/lesson03/实验3.RData")
+```
+(2) 设置随机种子为2026，在数据框APP_m_time后面添加一列，列名为游戏，值为0-100之间的随机数
+```{r}
+set.seed(2026)
+app_data$游戏 <- round(runif(nrow(app_data), min = 10, max = 100))
+```
+(3) 将app_data数据框中列名为“短视频时长”的列名修改为“短视频”
+```{r}
+app_data <- app_data %>%
+  rename(短视频 = 短视频时长)
+```
+
+(4) 将app_data数据框保存为 CSV 文件，文件名为App使用时长.csv，编码为 UTF-8
+```{r}
+write.csv(app_data, "data/App使用时长.csv", row.names = FALSE, fileEncoding = "UTF-8")
+```
+
+
+## 任务二：用 dplyr 找出值得进一步了解的记录
+
+分析问题：**短视频使用时长达到 120 分钟的记录有哪些？这些记录中，学习软件时长占已记录四类 App 总时长的比例是多少？**
+
+计算比例前先定义分母：四类 App 时长之和。比例只针对本实验记录的四类应用。
+
+(1) 短视频使用时长达到 120 分钟的记录有哪些？
+```{r}
+app_data |> filter(短视频>120)
+```
+
+(2) 短视频使用时长达到 120 分钟的记录有几条？
+```{r}
+app_data |> filter(短视频>120) |> 
+  summarise(n=n())
+```
+(3) app_data新建一列"总时长",记录每个学生的总花费时长
+```{r}
+app_data <- app_data |> 
+  mutate(总时长=微信+短视频+学习软件+游戏)
+```
+(4) app_data新建一列"学习时长比例",计算学习时长占总时长的比例，并按照学习时长比例降序排列
+
+```{r}
+app_data <- app_data |> 
+  mutate(学习时长比例=学习软件/总时长) |> 
+  arrange(desc(学习时长比例))
+```
+
+接着回答：**各年级的平均短视频时长是多少？某年级的短视频总时长占全部 24 条记录的短视频总时长多少？**
+
+(5) 各年级的平均短视频时长是多少? （提示：根据年级进行分组汇总）
+```{r}
+app_data |> group_by(年级) |> 
+  summarise(平均短视频时长=mean(短视频))
+```
+(6) 计算各个年级的累计短视频时长以及各个年级累计短视频时长占总时长的比例
+```{r}
+app_data |> group_by(年级) |> 
+  summarise(累计短视频时长=sum(短视频)) |> 
+  mutate(年级短视频时长比例=累计短视频时长/sum(累计短视频时长))
+```
+
+> 思考：`mean(短视频)` 与 `sum(短视频)` 回答的是同一个问题吗？能否仅凭三个年级各 8 条模拟记录，断定年级会影响使用习惯？
+
+
+
+## 任务三：把宽数据变成长数据，再还原
+
+(1) 将宽数据转换为长数据，将变换后的数据框病名为app_long,`App类型`存储微信、短视频等不同APP类型，
+`使用时长`存储具体时长信息,查看app_long数据框前8行。
+
+```{r}
+app_cols <- c("微信","短视频","学习软件","游戏")
+app_long <- app_data %>%
+  select(学号, 年级, all_of(app_cols)) %>%
+  pivot_longer(
+    cols = all_of(app_cols),
+    names_to = "App类型",
+    values_to = "使用时长"
+  )
+
+head(app_long, 8)
+```
+
+(2) 四类 App 各自的平均使用时长和总使用时长是多少？用汇总数据框App_summary存储上述计算数据，并按照平均使用时长降序排列。
+```{r}
+App_summary <- app_long %>%
+  group_by(App类型) %>%
+  summarise(
+    记录数 = n(),
+    平均使用时长 = round(mean(使用时长), 1),
+    总使用时长 = sum(使用时长),
+    .groups = "drop"
+  ) %>%
+  arrange(desc(平均使用时长))
+App_summary
+```
+
+
+## 任务四：保存分析结果，并读取 RData
+
+保存处理后的App_data,App_long,App_summary数据框，保存为 App_summary.RData
+
+```{r}
+
+```
+
+
+# 项目总结与提交
+
+## AI协作日志
+
+| 记录项 | 我的内容 |
+|---|---|
+| 我向 AI 提出的问题 | ________________ |
+| AI 给出的关键建议 | ________________ |
+| 我用什么方法验证它 | ________________ |
+| 我未采纳 / 修改的部分及原因 | ________________ |
+
+## 反思
+
+通过本项目的学习，我________________________________________________
+
+

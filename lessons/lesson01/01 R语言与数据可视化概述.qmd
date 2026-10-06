@@ -1,0 +1,60 @@
+---
+title: "01 R语言与数据可视化概述"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    code: fold
+    fig-default:
+      dev: ragg-png
+execute:
+  warning: false
+  message: false
+---
+
+# R软件的基本使用
+
+## RStudio软件界面介绍
+
+## 对象赋值与运行
+
+R语言的标准赋值符号是`<-`,快捷键为Alt+ -,也允许使用`=`进行赋值
+代码运行可以点击运行按钮，也可以用快捷键Ctrl+Enter键
+
+```{r}
+a <- 5
+a
+b <- 3
+print(b)
+```
+
+## 对象的基本运算
+```{r}
+a+b
+a-b
+```
+
+## 包的安装和使用
+
+R 包类似于Python 里的模块（module /package），就是别人提前写好、打包在一起的一堆现成 R 函数，拿来直接调用，不用自己从零写代码。
+```{r}
+#| eval: false
+# 安装包：ragg 是 R 的高质量位图绘图设备包
+install.packages("ragg")
+# 查看包的帮助说明
+?ggplot2
+```
+
+## 基本绘图
+```{r}
+plot(1:5,1:5,main="绘图测试")
+```
+
+
+
+
+
+
+
+
+

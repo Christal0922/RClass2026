@@ -1,0 +1,444 @@
+---
+title: "03 数据处理"
+format: 
+  html:
+    theme: cosmo
+    toc: true
+    number-sections: true
+    fig-default:
+      dev: ragg-png
+exeute:
+  warning: false
+  message: false
+---
+
+# 学习目标
+
++ 掌握数据的读取与保存方法
+
++ 掌握dplyr包的基本数据处理方法
+
++ 掌握长宽数据的转换方法
+
++ 掌握正态分布和均匀分布随机数的生成方法
+
+# 数据的读取与保存
+
+## EXCEL数据的读取与保存
+
+### excel格式数据的读取
+
+界面操作（右上角）：Environment-Import Dataset-From Text(base)
+
+注意：
+
+csv格式：From Text(base)
+
+| 数据格式| 界面按钮 |
+|------|------|
+| csv格式     | From Text(base)     |
+| xlsx格式     | From EXCEL     |
+| txt格式     | From Text(readr)     |
+
+: 常见数据格式
+
++ 语法说明
+
+read.csv("文件保存路径/文件名.csv")
+
+注意事项：文件路径使用/或者\\\\符号
+```{r}
+#data1_1 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap01/data1_1.csv", stringsAsFactors=TRUE)
+```
+
+
+
+| 参数 | 说明 |
+|------|------|
+| stringsAsFactors=TRUE     | 字符串作为因子    |
+
+: 参数说明
+
+
+读取table1_1的数据
+```{r}
+#table1_1 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap01/table1_1.csv")
+```
+
+
+### EXCEL格式数据的保存
+
+write.csv(变量名,file="文件保存路径/文件名.csv")
+
+ 
+ 
+
+| 参数 | 说明 |
+|------|------|
+| row.names=F     | 不保存行名 |
+
+: 参数说明
+
+```{r}
+#write.csv(data1_1,file = "./test.csv",row.names = F)
+```
+
+## RData格式数据的读取与保存
+
+### RData格式数据的读取
+
+语法：
+
+load("文件保存路径/文件名.RData")
+```{r}
+load("./data1_1.RData")
+```
+
+
+### RData格式数据的保存
+
+语法：
+
+save(变量名,file="文件保存路径/文件名.RData")
+```{r}
+#save(data1_1,table1_1,file = "./data1_1.RData")
+```
+
+# dplyr包进行数据处理
+
+## dplyr包的安装与加载
+```{r}
+# 本机已装就秒过，没装自动补装对应的R包
+if (!requireNamespace("dplyr", quietly = TRUE)) {
+  install.packages("dplyr")
+}
+library(dplyr)
+```
+
+或者使用tidyverse集合包
+```{r}
+if (!requireNamespace("tidyverse", quietly = TRUE)) {
+  install.packages("tidyverse")
+}
+library(tidyverse)
+```
+
+## dplyr包的主要函数
+
+| 函数 | 主要作用 | 常用写法 | 示例 |
+|---|---|---|---|
+| `select()` | 选择指定列 | `select(数据, 列名)` | `select(df, name, score)` |
+| `filter()` | 按条件筛选行 | `filter(数据, 条件)` | `filter(df, score >= 80)` |
+| `arrange()` | 按某一列排序 | `arrange(数据, 列名)` | `arrange(df, score)` |
+| `mutate()` | 新增或修改变量 | `mutate(数据, 新变量 = 表达式)` | `mutate(df, total = math + english)` |
+| `rename()` | 修改列名 | `rename(数据, 新列名 = 原列名)` | `rename(df, 成绩 = score)` |
+| `summarise()` | 对数据进行汇总统计 | `summarise(数据, 统计量 = 函数(变量))` | `summarise(df, avg = mean(score))` |
+| `group_by()` | 对数据进行分组 | `group_by(数据, 分组变量)` | `group_by(df, class)` |
+
+```r
+library(dplyr)
+
+df %>%
+  select(...) %>%          # 选择列
+  filter(...) %>%          # 筛选行
+  arrange(...) %>%         # 排序
+  mutate(...) %>%          # 新增/修改变量
+  rename(...) %>%          # 修改列名
+  group_by(...) %>%        # 分组
+  summarise(...)           # 汇总统计
+```
+
+## dplyr包课堂示例
+
+### filter 函数
+
+(1) 筛选出网购金额大于等于800的所有学生
+
+```{r}
+
+```
+
+(2) 筛选出网购金额在700-800之间且性别为男的所有学生
+```{r}
+
+```
+
+(3) 筛选出金融学专业的男博士
+```{r}
+
+```
+
+(4) 筛选出在读学位为硕士和博士的学生，并显示前3行
+```{r}
+
+```
+
+### 其他函数
+
+#### select 函数
+
+(5) 筛选出网购金额大于等于800的所有学生并输出性别、网购金额两列
+```{r}
+data1_1 %>%
+  filter(网购金额 >= 800) %>%
+  select(性别, 网购金额)
+```
+
+#### arrange函数
+
+(6) 在(5)的基础上，按照网购金额降序排列
+```{r}
+data1_1  |> 
+  filter(网购金额 >= 800)  |> 
+  select(性别, 网购金额) |> 
+  arrange(desc(网购金额))
+```
+
+#### summarise函数
+
+(7) 在(6)的基础上，计算网购金额的平均值
+```{r}
+data1_1  |> 
+  filter(网购金额 >= 800)  |> 
+  select(性别, 网购金额) |> 
+  arrange(desc(网购金额)) |> 
+  summarise(平均网购金额 = mean(网购金额))
+```
+
+(8) 在(6)的基础上，计算学生数量
+```{r}
+data1_1  |> 
+  filter(网购金额 >= 800)  |> 
+  select(性别, 网购金额) |> 
+  arrange(desc(网购金额)) |> 
+  summarise(学生数量 = n())
+```
+
+#### group_by函数
+
+(9) 基于data1_1数据框,按性别分组，计算每组的网购金额平均值以及网购金额总额
+```{r}
+data1_1  |> 
+  group_by(性别) |> 
+  summarise(平均网购金额 = mean(网购金额))
+```
+
+#### mutate函数
+
+(10) 在(9)的基础上，新增一列，计算每组网购金额总额占总网购金额的百分比
+
+```{r}
+library(dplyr)
+
+data1_1 %>%
+  group_by(性别) %>%
+  summarise(
+    网购金额平均值 = mean(网购金额),
+    网购金额总额 = sum(网购金额)
+  ) %>%
+  mutate(
+    占总网购金额百分比 = 网购金额总额 / sum(网购金额总额) * 100
+  )
+```
+
+### rename函数
+
+(11) 将data1_1数据框中的“网购金额”列重命名为“购物金额”
+
+语法说明：
+
+rename(新列名=旧列名)
+```{r}
+data1_1 %>%
+  rename(购物金额 = 网购金额)
+```
+
+## dplyr包课堂练习
+```{r}
+df <- data.frame(
+  id = 1:6,
+  name = c("张三", "李四", "王五", "赵六", "小陈", "小刘"),
+  gender = c("男", "女", "男", "女", "女", "男"),
+  score = c(85, 92, 78, 88, 95, 81),
+  age = c(20, 21, 19, 22, 20, 21)
+)
+```
+
+1. 选择 name、gender、score 和 age 四列；
+```{r}
+
+```
+
+2. 筛选年龄不低于 20 岁的学生；
+```{r}
+
+```
+
+3. 新增变量 level：成绩不低于 90 分记为“优秀”，否则记为“普通”；
+```{r}
+df |> 
+  mutate(level = ifelse(score >= 90, "优秀", "普通")) |> 
+  head()
+```
+
+4. 按性别分组，分别计算学生人数、平均成绩和优秀学生人数；
+```{r}
+
+```
+
+5. 按成绩score从高到低排序；
+```{r}
+
+```
+
+6. 将 gender 列重命名为“性别”。
+```{r}
+
+```
+
+# 长宽数据转换
+
+## table1_1数据框的长宽数据转换
+
+数据框table1_1中每一门课程占据1列，这种数据形式称为宽数据，但在用R进行数据分析和绘图时，需要将“课程”和“分数”放在单独的列中，这种格式为长格式
+
+实现将宽数据转换为长数据的方法有：
+
+1. reshape2包的melt函数
+
+2. tidyr包的pivot_longer函数
+
+### reshape2包的melt函数
+
+安装并加载reshape2包
+```{r}
+# 本机已装就秒过，没装自动补装对应的R包
+if (!requireNamespace("reshape2", quietly = TRUE)) {
+  install.packages("reshape2")
+}
+library(reshape2)
+```
+
+语法说明：
+
+```r
+melt(数据框,
+  id.vars="id列名",
+  variable.name="转换后变量列列名",
+  value.name="值列名")
+```
+
+| 参数 | 说明 |
+|------|------|
+| id.vars     | 保持不变的列名  |
+| measure.vars     | 需要转换的列名 |
+| variable.name     | 转换后变量列列名 |
+| value.name     | 值列名 |
+```{r}
+table1_1_long <- melt(table1_1, 
+                 id.vars = "姓名", 
+                 variable.name = "课程", 
+                 value.name = "分数")
+```
+
+
+### tidyr包的pivot_longer函数
+
+安装并加载tidyr包
+```{r}
+# 本机已装就秒过，没装自动补装对应的R包
+if (!requireNamespace("tidyr", quietly = TRUE)) {
+  install.packages("tidyr")
+}
+library(tidyr)
+```
+
+语法说明：
+
+```r
+melt(数据框,
+  cols=需要转换的列名或列号,
+  names_to ="转换后变量列列名",
+  values_to ="值列名")
+```
+
+| 参数 | 说明 |
+|------|------|
+| cols     | 需要转换的列名 |
+| names_to    | 转换后变量列列名 |
+| values_to     | 值列名 |
+```{r}
+table1_1_long2 <- pivot_longer(table1_1, 
+                 cols = 2:4, 
+                 names_to = "课程", 
+                 values_to = "分数")
+```
+
+## 长宽数据转换课堂练习题
+
+某班调查了 5 名学生一天使用不同类型手机 App的时长，单位为分钟。原始数据如下:
+```{r}
+app_usage <- data.frame(
+  姓名 = c("张三", "李四", "王五", "赵六", "小陈"),
+  微信 = c(85, 60, 95, 70, 80),
+  短视频 = c(120, 90, 150, 65,110),
+  学习软件 = c(45, 80, 30, 90, 60),
+  游戏 = c(60, 30, 100, 20, 45)
+)
+
+app_usage
+```
+
+要求：将上述宽数据转换成长数据，将“微信、短视频、学习软件、游戏”合并为变量 App类型，对应的使用时长存放在变量 使用时长中。
+、在长数据基础上，计算每种 App 的平均使用时长。
+```{r}
+
+```
+
+# 随机数
+
+## 正态分布随机数的生成：rnorm
+
+语法说明：
+rnorm(n, mean = 0, sd = 1)
+
+| 参数 | 说明 |
+|------|------|
+| n     | 随机数的数量 |
+| mean   | 平均数 |
+| sd   | 标准差 |
+
+生成5个标准正态分布的随机数，平均数为0，标准差为1
+```{r}
+# 设置随机数种子
+set.seed(123)
+```
+
+
+## 均匀分布随机数的生成：runif
+
+语法说明：
+runif(n, min = 0, max = 1)
+
+| 参数 | 说明 |
+|------|------|
+| n     | 随机数的数量 |
+| mean   | 平均数 |
+| sd   | 标准差 |
+
+生成0~10之间5个均匀分布的随机数
+```{r}
+
+```
+
+
+# 总结
+
+| 函数 | 说明 |
+|------|------|
+| read.csv     | csv格式数据的读取  |
+| load   | RData格式数据的读取  |
+| dplyr包   | 数据的基本操作 |
+| tidyr包的pivot_longer   | 将宽数据转换为长数据 |
+| rnorm | 正态分布随机数的生成 |
+| runif | 均匀分布随机数的生成 |

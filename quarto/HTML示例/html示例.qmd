@@ -1,0 +1,28 @@
+---
+title: "HTML示例"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-location: left
+    number-sections: true
+    theme: cerulean
+    highlight-style: ayu-dark
+execute:
+  warning: false
+  message: false
+  cache: true
+knitr:
+  opts_chunk:
+    dev: ragg_png
+    dpi: 150
+---
+
+# 标题1
+
+## 标题2
+
+```{r}
+plot(1:5,1:5,main="标题")
+```
+

@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>03 数据处理</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="03 数据处理_files/libs/clipboard/clipboard.min.js"></script>
+<script src="03 数据处理_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="03 数据处理_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="03 数据处理_files/libs/quarto-html/popper.min.js"></script>
+<script src="03 数据处理_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="03 数据处理_files/libs/quarto-html/anchor.min.js"></script>
+<link href="03 数据处理_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="03 数据处理_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="03 数据处理_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="03 数据处理_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="03 数据处理_files/libs/bootstrap/bootstrap-67270d1595a62d14f123c043d4fb2f18.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#学习目标" id="toc-学习目标" class="nav-link active" data-scroll-target="#学习目标"><span class="header-section-number">1</span> 学习目标</a></li>
+  <li><a href="#数据的读取与保存" id="toc-数据的读取与保存" class="nav-link" data-scroll-target="#数据的读取与保存"><span class="header-section-number">2</span> 数据的读取与保存</a>
+  <ul class="collapse">
+  <li><a href="#excel数据的读取与保存" id="toc-excel数据的读取与保存" class="nav-link" data-scroll-target="#excel数据的读取与保存"><span class="header-section-number">2.1</span> EXCEL数据的读取与保存</a>
+  <ul class="collapse">
+  <li><a href="#excel格式数据的读取" id="toc-excel格式数据的读取" class="nav-link" data-scroll-target="#excel格式数据的读取"><span class="header-section-number">2.1.1</span> excel格式数据的读取</a></li>
+  <li><a href="#excel格式数据的保存" id="toc-excel格式数据的保存" class="nav-link" data-scroll-target="#excel格式数据的保存"><span class="header-section-number">2.1.2</span> EXCEL格式数据的保存</a></li>
+  </ul></li>
+  <li><a href="#rdata格式数据的读取与保存" id="toc-rdata格式数据的读取与保存" class="nav-link" data-scroll-target="#rdata格式数据的读取与保存"><span class="header-section-number">2.2</span> RData格式数据的读取与保存</a>
+  <ul class="collapse">
+  <li><a href="#rdata格式数据的读取" id="toc-rdata格式数据的读取" class="nav-link" data-scroll-target="#rdata格式数据的读取"><span class="header-section-number">2.2.1</span> RData格式数据的读取</a></li>
+  <li><a href="#rdata格式数据的保存" id="toc-rdata格式数据的保存" class="nav-link" data-scroll-target="#rdata格式数据的保存"><span class="header-section-number">2.2.2</span> RData格式数据的保存</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#dplyr包进行数据处理" id="toc-dplyr包进行数据处理" class="nav-link" data-scroll-target="#dplyr包进行数据处理"><span class="header-section-number">3</span> dplyr包进行数据处理</a>
+  <ul class="collapse">
+  <li><a href="#dplyr包的安装与加载" id="toc-dplyr包的安装与加载" class="nav-link" data-scroll-target="#dplyr包的安装与加载"><span class="header-section-number">3.1</span> dplyr包的安装与加载</a></li>
+  <li><a href="#dplyr包的主要函数" id="toc-dplyr包的主要函数" class="nav-link" data-scroll-target="#dplyr包的主要函数"><span class="header-section-number">3.2</span> dplyr包的主要函数</a></li>
+  <li><a href="#dplyr包课堂示例" id="toc-dplyr包课堂示例" class="nav-link" data-scroll-target="#dplyr包课堂示例"><span class="header-section-number">3.3</span> dplyr包课堂示例</a>
+  <ul class="collapse">
+  <li><a href="#filter-函数" id="toc-filter-函数" class="nav-link" data-scroll-target="#filter-函数"><span class="header-section-number">3.3.1</span> filter 函数</a></li>
+  <li><a href="#其他函数" id="toc-其他函数" class="nav-link" data-scroll-target="#其他函数"><span class="header-section-number">3.3.2</span> 其他函数</a></li>
+  <li><a href="#rename函数" id="toc-rename函数" class="nav-link" data-scroll-target="#rename函数"><span class="header-section-number">3.3.3</span> rename函数</a></li>
+  </ul></li>
+  <li><a href="#dplyr包课堂练习" id="toc-dplyr包课堂练习" class="nav-link" data-scroll-target="#dplyr包课堂练习"><span class="header-section-number">3.4</span> dplyr包课堂练习</a></li>
+  </ul></li>
+  <li><a href="#长宽数据转换" id="toc-长宽数据转换" class="nav-link" data-scroll-target="#长宽数据转换"><span class="header-section-number">4</span> 长宽数据转换</a>
+  <ul class="collapse">
+  <li><a href="#table1_1数据框的长宽数据转换" id="toc-table1_1数据框的长宽数据转换" class="nav-link" data-scroll-target="#table1_1数据框的长宽数据转换"><span class="header-section-number">4.1</span> table1_1数据框的长宽数据转换</a>
+  <ul class="collapse">
+  <li><a href="#reshape2包的melt函数" id="toc-reshape2包的melt函数" class="nav-link" data-scroll-target="#reshape2包的melt函数"><span class="header-section-number">4.1.1</span> reshape2包的melt函数</a></li>
+  <li><a href="#tidyr包的pivot_longer函数" id="toc-tidyr包的pivot_longer函数" class="nav-link" data-scroll-target="#tidyr包的pivot_longer函数"><span class="header-section-number">4.1.2</span> tidyr包的pivot_longer函数</a></li>
+  </ul></li>
+  <li><a href="#长宽数据转换课堂练习题" id="toc-长宽数据转换课堂练习题" class="nav-link" data-scroll-target="#长宽数据转换课堂练习题"><span class="header-section-number">4.2</span> 长宽数据转换课堂练习题</a></li>
+  </ul></li>
+  <li><a href="#随机数" id="toc-随机数" class="nav-link" data-scroll-target="#随机数"><span class="header-section-number">5</span> 随机数</a>
+  <ul class="collapse">
+  <li><a href="#正态分布随机数的生成rnorm" id="toc-正态分布随机数的生成rnorm" class="nav-link" data-scroll-target="#正态分布随机数的生成rnorm"><span class="header-section-number">5.1</span> 正态分布随机数的生成：rnorm</a></li>
+  <li><a href="#均匀分布随机数的生成runif" id="toc-均匀分布随机数的生成runif" class="nav-link" data-scroll-target="#均匀分布随机数的生成runif"><span class="header-section-number">5.2</span> 均匀分布随机数的生成：runif</a></li>
+  </ul></li>
+  <li><a href="#总结" id="toc-总结" class="nav-link" data-scroll-target="#总结"><span class="header-section-number">6</span> 总结</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">03 数据处理</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="学习目标" class="level1" data-number="1">
+<h1 data-number="1"><span class="header-section-number">1</span> 学习目标</h1>
+<ul>
+<li><p>掌握数据的读取与保存方法</p></li>
+<li><p>掌握dplyr包的基本数据处理方法</p></li>
+<li><p>掌握长宽数据的转换方法</p></li>
+<li><p>掌握正态分布和均匀分布随机数的生成方法</p></li>
+</ul>
+</section>
+<section id="数据的读取与保存" class="level1" data-number="2">
+<h1 data-number="2"><span class="header-section-number">2</span> 数据的读取与保存</h1>
+<section id="excel数据的读取与保存" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="excel数据的读取与保存"><span class="header-section-number">2.1</span> EXCEL数据的读取与保存</h2>
+<section id="excel格式数据的读取" class="level3" data-number="2.1.1">
+<h3 data-number="2.1.1" class="anchored" data-anchor-id="excel格式数据的读取"><span class="header-section-number">2.1.1</span> excel格式数据的读取</h3>
+<p>界面操作（右上角）：Environment-Import Dataset-From Text(base)</p>
+<p>注意：</p>
+<p>csv格式：From Text(base)</p>
+<table class="caption-top table">
+<caption>常见数据格式</caption>
+<thead>
+<tr class="header">
+<th>数据格式</th>
+<th>界面按钮</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>csv格式</td>
+<td>From Text(base)</td>
+</tr>
+<tr class="even">
+<td>xlsx格式</td>
+<td>From EXCEL</td>
+</tr>
+<tr class="odd">
+<td>txt格式</td>
+<td>From Text(readr)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>语法说明</li>
+</ul>
+<p>read.csv(“文件保存路径/文件名.csv”)</p>
+<p>注意事项：文件路径使用/或者\\符号</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#data1_1 &lt;- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap01/data1_1.csv", stringsAsFactors=TRUE)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<table class="caption-top table">
+<caption>参数说明</caption>
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>stringsAsFactors=TRUE</td>
+<td>字符串作为因子</td>
+</tr>
+</tbody>
+</table>
+<p>读取table1_1的数据</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#table1_1 &lt;- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap01/table1_1.csv")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="excel格式数据的保存" class="level3" data-number="2.1.2">
+<h3 data-number="2.1.2" class="anchored" data-anchor-id="excel格式数据的保存"><span class="header-section-number">2.1.2</span> EXCEL格式数据的保存</h3>
+<p>write.csv(变量名,file=“文件保存路径/文件名.csv”)</p>
+<table class="caption-top table">
+<caption>参数说明</caption>
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>row.names=F</td>
+<td>不保存行名</td>
+</tr>
+</tbody>
+</table>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#write.csv(data1_1,file = "./test.csv",row.names = F)</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="rdata格式数据的读取与保存" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="rdata格式数据的读取与保存"><span class="header-section-number">2.2</span> RData格式数据的读取与保存</h2>
+<section id="rdata格式数据的读取" class="level3" data-number="2.2.1">
+<h3 data-number="2.2.1" class="anchored" data-anchor-id="rdata格式数据的读取"><span class="header-section-number">2.2.1</span> RData格式数据的读取</h3>
+<p>语法：</p>
+<p>load(“文件保存路径/文件名.RData”)</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">load</span>(<span class="st">"./data1_1.RData"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="rdata格式数据的保存" class="level3" data-number="2.2.2">
+<h3 data-number="2.2.2" class="anchored" data-anchor-id="rdata格式数据的保存"><span class="header-section-number">2.2.2</span> RData格式数据的保存</h3>
+<p>语法：</p>
+<p>save(变量名,file=“文件保存路径/文件名.RData”)</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co">#save(data1_1,table1_1,file = "./data1_1.RData")</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+</section>
+<section id="dplyr包进行数据处理" class="level1" data-number="3">
+<h1 data-number="3"><span class="header-section-number">3</span> dplyr包进行数据处理</h1>
+<section id="dplyr包的安装与加载" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="dplyr包的安装与加载"><span class="header-section-number">3.1</span> dplyr包的安装与加载</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 本机已装就秒过，没装自动补装对应的R包</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"dplyr"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"dplyr"</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+</div>
+<p>或者使用tidyverse集合包</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"tidyverse"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"tidyverse"</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ forcats   1.0.1     ✔ readr     2.2.0
+✔ ggplot2   4.0.3     ✔ stringr   1.6.0
+✔ lubridate 1.9.5     ✔ tibble    3.3.1
+✔ purrr     1.2.2     ✔ tidyr     1.3.2
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+</div>
+</section>
+<section id="dplyr包的主要函数" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="dplyr包的主要函数"><span class="header-section-number">3.2</span> dplyr包的主要函数</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>函数</th>
+<th>主要作用</th>
+<th>常用写法</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>select()</code></td>
+<td>选择指定列</td>
+<td><code>select(数据, 列名)</code></td>
+<td><code>select(df, name, score)</code></td>
+</tr>
+<tr class="even">
+<td><code>filter()</code></td>
+<td>按条件筛选行</td>
+<td><code>filter(数据, 条件)</code></td>
+<td><code>filter(df, score &gt;= 80)</code></td>
+</tr>
+<tr class="odd">
+<td><code>arrange()</code></td>
+<td>按某一列排序</td>
+<td><code>arrange(数据, 列名)</code></td>
+<td><code>arrange(df, score)</code></td>
+</tr>
+<tr class="even">
+<td><code>mutate()</code></td>
+<td>新增或修改变量</td>
+<td><code>mutate(数据, 新变量 = 表达式)</code></td>
+<td><code>mutate(df, total = math + english)</code></td>
+</tr>
+<tr class="odd">
+<td><code>rename()</code></td>
+<td>修改列名</td>
+<td><code>rename(数据, 新列名 = 原列名)</code></td>
+<td><code>rename(df, 成绩 = score)</code></td>
+</tr>
+<tr class="even">
+<td><code>summarise()</code></td>
+<td>对数据进行汇总统计</td>
+<td><code>summarise(数据, 统计量 = 函数(变量))</code></td>
+<td><code>summarise(df, avg = mean(score))</code></td>
+</tr>
+<tr class="odd">
+<td><code>group_by()</code></td>
+<td>对数据进行分组</td>
+<td><code>group_by(数据, 分组变量)</code></td>
+<td><code>group_by(df, class)</code></td>
+</tr>
+</tbody>
+</table>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>df <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(...) <span class="sc">%&gt;%</span>          <span class="co"># 选择列</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(...) <span class="sc">%&gt;%</span>          <span class="co"># 筛选行</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(...) <span class="sc">%&gt;%</span>         <span class="co"># 排序</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(...) <span class="sc">%&gt;%</span>          <span class="co"># 新增/修改变量</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(...) <span class="sc">%&gt;%</span>          <span class="co"># 修改列名</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(...) <span class="sc">%&gt;%</span>        <span class="co"># 分组</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(...)           <span class="co"># 汇总统计</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="dplyr包课堂示例" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="dplyr包课堂示例"><span class="header-section-number">3.3</span> dplyr包课堂示例</h2>
+<section id="filter-函数" class="level3" data-number="3.3.1">
+<h3 data-number="3.3.1" class="anchored" data-anchor-id="filter-函数"><span class="header-section-number">3.3.1</span> filter 函数</h3>
+<ol type="1">
+<li>筛选出网购金额大于等于800的所有学生</li>
+</ol>
+<ol start="2" type="1">
+<li>筛选出网购金额在700-800之间且性别为男的所有学生</li>
+</ol>
+<ol start="3" type="1">
+<li>筛选出金融学专业的男博士</li>
+</ol>
+<ol start="4" type="1">
+<li>筛选出在读学位为硕士和博士的学生，并显示前3行</li>
+</ol>
+</section>
+<section id="其他函数" class="level3" data-number="3.3.2">
+<h3 data-number="3.3.2" class="anchored" data-anchor-id="其他函数"><span class="header-section-number">3.3.2</span> 其他函数</h3>
+<section id="select-函数" class="level4" data-number="3.3.2.1">
+<h4 data-number="3.3.2.1" class="anchored" data-anchor-id="select-函数"><span class="header-section-number">3.3.2.1</span> select 函数</h4>
+<ol start="5" type="1">
+<li>筛选出网购金额大于等于800的所有学生并输出性别、网购金额两列</li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>data1_1 <span class="sc">%&gt;%</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(网购金额 <span class="sc">&gt;=</span> <span class="dv">800</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(性别, 网购金额)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  性别 网购金额
+1   女      825
+2   女      802
+3   女      885</code></pre>
+</div>
+</div>
+</section>
+<section id="arrange函数" class="level4" data-number="3.3.2.2">
+<h4 data-number="3.3.2.2" class="anchored" data-anchor-id="arrange函数"><span class="header-section-number">3.3.2.2</span> arrange函数</h4>
+<ol start="6" type="1">
+<li>在(5)的基础上，按照网购金额降序排列</li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>data1_1  <span class="sc">|&gt;</span> </span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(网购金额 <span class="sc">&gt;=</span> <span class="dv">800</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(性别, 网购金额) <span class="sc">|&gt;</span> </span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(网购金额))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  性别 网购金额
+1   女      885
+2   女      825
+3   女      802</code></pre>
+</div>
+</div>
+</section>
+<section id="summarise函数" class="level4" data-number="3.3.2.3">
+<h4 data-number="3.3.2.3" class="anchored" data-anchor-id="summarise函数"><span class="header-section-number">3.3.2.3</span> summarise函数</h4>
+<ol start="7" type="1">
+<li>在(6)的基础上，计算网购金额的平均值</li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>data1_1  <span class="sc">|&gt;</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(网购金额 <span class="sc">&gt;=</span> <span class="dv">800</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(性别, 网购金额) <span class="sc">|&gt;</span> </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(网购金额)) <span class="sc">|&gt;</span> </span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(平均网购金额 <span class="ot">=</span> <span class="fu">mean</span>(网购金额))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  平均网购金额
+1     837.3333</code></pre>
+</div>
+</div>
+<ol start="8" type="1">
+<li>在(6)的基础上，计算学生数量</li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>data1_1  <span class="sc">|&gt;</span> </span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(网购金额 <span class="sc">&gt;=</span> <span class="dv">800</span>)  <span class="sc">|&gt;</span> </span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(性别, 网购金额) <span class="sc">|&gt;</span> </span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(<span class="fu">desc</span>(网购金额)) <span class="sc">|&gt;</span> </span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(学生数量 <span class="ot">=</span> <span class="fu">n</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  学生数量
+1        3</code></pre>
+</div>
+</div>
+</section>
+<section id="group_by函数" class="level4" data-number="3.3.2.4">
+<h4 data-number="3.3.2.4" class="anchored" data-anchor-id="group_by函数"><span class="header-section-number">3.3.2.4</span> group_by函数</h4>
+<ol start="9" type="1">
+<li>基于data1_1数据框,按性别分组，计算每组的网购金额平均值以及网购金额总额</li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>data1_1  <span class="sc">|&gt;</span> </span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(性别) <span class="sc">|&gt;</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(平均网购金额 <span class="ot">=</span> <span class="fu">mean</span>(网购金额))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 2
+  性别  平均网购金额
+  &lt;fct&gt;        &lt;dbl&gt;
+1 男            445.
+2 女            474.</code></pre>
+</div>
+</div>
+</section>
+<section id="mutate函数" class="level4" data-number="3.3.2.5">
+<h4 data-number="3.3.2.5" class="anchored" data-anchor-id="mutate函数"><span class="header-section-number">3.3.2.5</span> mutate函数</h4>
+<ol start="10" type="1">
+<li>在(9)的基础上，新增一列，计算每组网购金额总额占总网购金额的百分比</li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>data1_1 <span class="sc">%&gt;%</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(性别) <span class="sc">%&gt;%</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    网购金额平均值 <span class="ot">=</span> <span class="fu">mean</span>(网购金额),</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    网购金额总额 <span class="ot">=</span> <span class="fu">sum</span>(网购金额)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    占总网购金额百分比 <span class="ot">=</span> 网购金额总额 <span class="sc">/</span> <span class="fu">sum</span>(网购金额总额) <span class="sc">*</span> <span class="dv">100</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 4
+  性别  网购金额平均值 网购金额总额 占总网购金额百分比
+  &lt;fct&gt;          &lt;dbl&gt;        &lt;int&gt;              &lt;dbl&gt;
+1 男              445.        24013               43.4
+2 女              474.        31301               56.6</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="rename函数" class="level3" data-number="3.3.3">
+<h3 data-number="3.3.3" class="anchored" data-anchor-id="rename函数"><span class="header-section-number">3.3.3</span> rename函数</h3>
+<ol start="11" type="1">
+<li>将data1_1数据框中的“网购金额”列重命名为“购物金额”</li>
+</ol>
+<p>语法说明：</p>
+<p>rename(新列名=旧列名)</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>data1_1 <span class="sc">%&gt;%</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(购物金额 <span class="ot">=</span> 网购金额)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>    性别   专业 在读学位 购物金额
+1     女 会计学     学士      382
+2     女 金融学     硕士      171
+3     男 会计学     博士      579
+4     男 管理学     学士      211
+5     女 会计学     学士      654
+6     男 金融学     学士      290
+7     女 管理学     硕士      108
+8     女 会计学     硕士      724
+9     男 金融学     学士      569
+10    女 会计学     博士      424
+11    男 金融学     博士      317
+12    女 金融学     学士      294
+13    女 管理学     博士      375
+14    女 会计学     硕士      264
+15    女 会计学     硕士      573
+16    男 金融学     学士      521
+17    女 会计学     学士      469
+18    女 管理学     学士      422
+19    男 管理学     博士      573
+20    女 金融学     学士      570
+21    男 管理学     学士      556
+22    女 金融学     硕士      520
+23    男 管理学     博士      518
+24    女 金融学     硕士      780
+25    女 金融学     硕士      552
+26    女 管理学     硕士      495
+27    男 金融学     博士      304
+28    女 会计学     学士      700
+29    男 金融学     硕士      316
+30    女 会计学     博士      281
+31    女 会计学     硕士      730
+32    男 金融学     学士      204
+33    女 会计学     硕士      454
+34    女 会计学     博士      546
+35    女 会计学     学士      511
+36    男 会计学     博士      158
+37    男 管理学     学士      675
+38    男 管理学     学士      481
+39    男 管理学     博士      362
+40    男 会计学     学士      112
+41    女 金融学     硕士      708
+42    男 管理学     学士      494
+43    女 管理学     博士      209
+44    男 金融学     学士      128
+45    男 金融学     硕士      638
+46    男 管理学     学士      705
+47    男 管理学     博士      696
+48    男 会计学     硕士      266
+49    男 管理学     博士      579
+50    男 管理学     博士      446
+51    女 金融学     博士      729
+52    男 会计学     学士      608
+53    男 会计学     学士      224
+54    女 金融学     博士      286
+55    男 会计学     学士      434
+56    男 金融学     博士      565
+57    男 会计学     博士      534
+58    男 会计学     硕士      559
+59    女 金融学     硕士      586
+60    女 会计学     学士      383
+61    男 金融学     硕士      410
+62    男 金融学     硕士      542
+63    男 管理学     硕士      404
+64    女 会计学     博士      318
+65    女 会计学     硕士      397
+66    男 金融学     学士      490
+67    女 会计学     硕士      434
+68    男 管理学     硕士      419
+69    男 管理学     学士      408
+70    女 金融学     硕士      582
+71    男 管理学     硕士      111
+72    女 金融学     博士      648
+73    男 管理学     学士      762
+74    女 金融学     博士      309
+75    女 金融学     博士      128
+76    女 管理学     博士      371
+77    女 金融学     博士      338
+78    女 金融学     博士      287
+79    男 金融学     博士      285
+80    女 会计学     硕士      487
+81    女 会计学     学士      491
+82    男 金融学     硕士      519
+83    女 会计学     学士      442
+84    女 会计学     学士      825
+85    女 会计学     学士      802
+86    男 会计学     硕士      449
+87    女 管理学     硕士      516
+88    女 管理学     学士      752
+89    男 管理学     学士      347
+90    女 会计学     硕士      599
+91    女 会计学     博士      274
+92    女 管理学     硕士      637
+93    女 管理学     学士      501
+94    男 金融学     硕士      126
+95    男 金融学     硕士      649
+96    男 管理学     学士      217
+97    女 管理学     博士      645
+98    女 会计学     学士      525
+99    女 会计学     硕士      233
+100   男 会计学     硕士      776
+101   男 会计学     博士      244
+102   男 金融学     硕士      652
+103   女 会计学     博士      484
+104   男 金融学     博士      586
+105   女 金融学     硕士      431
+106   女 管理学     硕士      451
+107   女 会计学     博士      308
+108   女 会计学     硕士      356
+109   男 金融学     硕士      527
+110   女 会计学     硕士      401
+111   女 管理学     硕士      285
+112   男 管理学     学士      355
+113   女 金融学     学士      477
+114   女 管理学     博士      449
+115   女 金融学     硕士      885
+116   男 管理学     博士      396
+117   女 金融学     博士      398
+118   女 金融学     学士      360
+119   女 管理学     硕士      575
+120   男 金融学     硕士      717</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="dplyr包课堂练习" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="dplyr包课堂练习"><span class="header-section-number">3.4</span> dplyr包课堂练习</h2>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">id =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>,</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">name =</span> <span class="fu">c</span>(<span class="st">"张三"</span>, <span class="st">"李四"</span>, <span class="st">"王五"</span>, <span class="st">"赵六"</span>, <span class="st">"小陈"</span>, <span class="st">"小刘"</span>),</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">gender =</span> <span class="fu">c</span>(<span class="st">"男"</span>, <span class="st">"女"</span>, <span class="st">"男"</span>, <span class="st">"女"</span>, <span class="st">"女"</span>, <span class="st">"男"</span>),</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">score =</span> <span class="fu">c</span>(<span class="dv">85</span>, <span class="dv">92</span>, <span class="dv">78</span>, <span class="dv">88</span>, <span class="dv">95</span>, <span class="dv">81</span>),</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">age =</span> <span class="fu">c</span>(<span class="dv">20</span>, <span class="dv">21</span>, <span class="dv">19</span>, <span class="dv">22</span>, <span class="dv">20</span>, <span class="dv">21</span>)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<ol type="1">
+<li>选择 name、gender、score 和 age 四列；</li>
+</ol>
+<ol start="2" type="1">
+<li>筛选年龄不低于 20 岁的学生；</li>
+</ol>
+<ol start="3" type="1">
+<li>新增变量 level：成绩不低于 90 分记为“优秀”，否则记为“普通”；</li>
+</ol>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span> </span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">level =</span> <span class="fu">ifelse</span>(score <span class="sc">&gt;=</span> <span class="dv">90</span>, <span class="st">"优秀"</span>, <span class="st">"普通"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">head</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  id name gender score age level
+1  1 张三     男    85  20  普通
+2  2 李四     女    92  21  优秀
+3  3 王五     男    78  19  普通
+4  4 赵六     女    88  22  普通
+5  5 小陈     女    95  20  优秀
+6  6 小刘     男    81  21  普通</code></pre>
+</div>
+</div>
+<ol start="4" type="1">
+<li>按性别分组，分别计算学生人数、平均成绩和优秀学生人数；</li>
+</ol>
+<ol start="5" type="1">
+<li>按成绩score从高到低排序；</li>
+</ol>
+<ol start="6" type="1">
+<li>将 gender 列重命名为“性别”。</li>
+</ol>
+</section>
+</section>
+<section id="长宽数据转换" class="level1" data-number="4">
+<h1 data-number="4"><span class="header-section-number">4</span> 长宽数据转换</h1>
+<section id="table1_1数据框的长宽数据转换" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="table1_1数据框的长宽数据转换"><span class="header-section-number">4.1</span> table1_1数据框的长宽数据转换</h2>
+<p>数据框table1_1中每一门课程占据1列，这种数据形式称为宽数据，但在用R进行数据分析和绘图时，需要将“课程”和“分数”放在单独的列中，这种格式为长格式</p>
+<p>实现将宽数据转换为长数据的方法有：</p>
+<ol type="1">
+<li><p>reshape2包的melt函数</p></li>
+<li><p>tidyr包的pivot_longer函数</p></li>
+</ol>
+<section id="reshape2包的melt函数" class="level3" data-number="4.1.1">
+<h3 data-number="4.1.1" class="anchored" data-anchor-id="reshape2包的melt函数"><span class="header-section-number">4.1.1</span> reshape2包的melt函数</h3>
+<p>安装并加载reshape2包</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 本机已装就秒过，没装自动补装对应的R包</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"reshape2"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">install.packages</span>(<span class="st">"reshape2"</span>)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'reshape2'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:tidyr':
+
+    smiths</code></pre>
+</div>
+</div>
+<p>语法说明：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">melt</span>(数据框,</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">id.vars=</span><span class="st">"id列名"</span>,</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">variable.name=</span><span class="st">"转换后变量列列名"</span>,</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">value.name=</span><span class="st">"值列名"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>id.vars</td>
+<td>保持不变的列名</td>
+</tr>
+<tr class="even">
+<td>measure.vars</td>
+<td>需要转换的列名</td>
+</tr>
+<tr class="odd">
+<td>variable.name</td>
+<td>转换后变量列列名</td>
+</tr>
+<tr class="even">
+<td>value.name</td>
+<td>值列名</td>
+</tr>
+</tbody>
+</table>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>table1_1_long <span class="ot">&lt;-</span> <span class="fu">melt</span>(table1_1, </span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">id.vars =</span> <span class="st">"姓名"</span>, </span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">variable.name =</span> <span class="st">"课程"</span>, </span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">value.name =</span> <span class="st">"分数"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="tidyr包的pivot_longer函数" class="level3" data-number="4.1.2">
+<h3 data-number="4.1.2" class="anchored" data-anchor-id="tidyr包的pivot_longer函数"><span class="header-section-number">4.1.2</span> tidyr包的pivot_longer函数</h3>
+<p>语法说明：</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">melt</span>(数据框,</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">cols=</span>需要转换的列名或列号,</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">names_to =</span><span class="st">"转换后变量列列名"</span>,</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">values_to =</span><span class="st">"值列名"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>cols</td>
+<td>需要转换的列名</td>
+</tr>
+<tr class="even">
+<td>names_to</td>
+<td>转换后变量列列名</td>
+</tr>
+<tr class="odd">
+<td>values_to</td>
+<td>值列名</td>
+</tr>
+</tbody>
+</table>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>table1_1_long2 <span class="ot">&lt;-</span> <span class="fu">pivot_longer</span>(table1_1, </span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>                 <span class="at">cols =</span> <span class="dv">2</span><span class="sc">:</span><span class="dv">4</span>, </span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>                 <span class="at">names_to =</span> <span class="st">"课程"</span>, </span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>                 <span class="at">values_to =</span> <span class="st">"分数"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="长宽数据转换课堂练习题" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="长宽数据转换课堂练习题"><span class="header-section-number">4.2</span> 长宽数据转换课堂练习题</h2>
+<p>某班调查了 5 名学生一天使用不同类型手机 App的时长，单位为分钟。原始数据如下:</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>app_usage <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>  姓名 <span class="ot">=</span> <span class="fu">c</span>(<span class="st">"张三"</span>, <span class="st">"李四"</span>, <span class="st">"王五"</span>, <span class="st">"赵六"</span>, <span class="st">"小陈"</span>),</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  微信 <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">85</span>, <span class="dv">60</span>, <span class="dv">95</span>, <span class="dv">70</span>, <span class="dv">80</span>),</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  短视频 <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">120</span>, <span class="dv">90</span>, <span class="dv">150</span>, <span class="dv">65</span>,<span class="dv">110</span>),</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>  学习软件 <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">45</span>, <span class="dv">80</span>, <span class="dv">30</span>, <span class="dv">90</span>, <span class="dv">60</span>),</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>  游戏 <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">60</span>, <span class="dv">30</span>, <span class="dv">100</span>, <span class="dv">20</span>, <span class="dv">45</span>)</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>app_usage</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  姓名 微信 短视频 学习软件 游戏
+1 张三   85    120       45   60
+2 李四   60     90       80   30
+3 王五   95    150       30  100
+4 赵六   70     65       90   20
+5 小陈   80    110       60   45</code></pre>
+</div>
+</div>
+<p>要求：将上述宽数据转换成长数据，将“微信、短视频、学习软件、游戏”合并为变量 App类型，对应的使用时长存放在变量 使用时长中。 、在长数据基础上，计算每种 App 的平均使用时长。</p>
+</section>
+</section>
+<section id="随机数" class="level1" data-number="5">
+<h1 data-number="5"><span class="header-section-number">5</span> 随机数</h1>
+<section id="正态分布随机数的生成rnorm" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="正态分布随机数的生成rnorm"><span class="header-section-number">5.1</span> 正态分布随机数的生成：rnorm</h2>
+<p>语法说明： rnorm(n, mean = 0, sd = 1)</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>n</td>
+<td>随机数的数量</td>
+</tr>
+<tr class="even">
+<td>mean</td>
+<td>平均数</td>
+</tr>
+<tr class="odd">
+<td>sd</td>
+<td>标准差</td>
+</tr>
+</tbody>
+</table>
+<p>生成5个标准正态分布的随机数，平均数为0，标准差为1</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 设置随机数种子</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="均匀分布随机数的生成runif" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="均匀分布随机数的生成runif"><span class="header-section-number">5.2</span> 均匀分布随机数的生成：runif</h2>
+<p>语法说明： runif(n, min = 0, max = 1)</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>n</td>
+<td>随机数的数量</td>
+</tr>
+<tr class="even">
+<td>mean</td>
+<td>平均数</td>
+</tr>
+<tr class="odd">
+<td>sd</td>
+<td>标准差</td>
+</tr>
+</tbody>
+</table>
+<p>生成0~10之间5个均匀分布的随机数</p>
+</section>
+</section>
+<section id="总结" class="level1" data-number="6">
+<h1 data-number="6"><span class="header-section-number">6</span> 总结</h1>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>read.csv</td>
+<td>csv格式数据的读取</td>
+</tr>
+<tr class="even">
+<td>load</td>
+<td>RData格式数据的读取</td>
+</tr>
+<tr class="odd">
+<td>dplyr包</td>
+<td>数据的基本操作</td>
+</tr>
+<tr class="even">
+<td>tidyr包的pivot_longer</td>
+<td>将宽数据转换为长数据</td>
+</tr>
+<tr class="odd">
+<td>rnorm</td>
+<td>正态分布随机数的生成</td>
+</tr>
+<tr class="even">
+<td>runif</td>
+<td>均匀分布随机数的生成</td>
+</tr>
+</tbody>
+</table>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
