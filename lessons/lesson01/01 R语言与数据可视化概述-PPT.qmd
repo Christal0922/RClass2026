@@ -1,0 +1,331 @@
+---
+title: "01 R语言与数据可视化概述"
+format:
+  revealjs:
+    theme: night
+    width: 1280
+    height: 720
+    margin: 0.08
+    code-block-bg: "#f5f5f5"
+    code-block-border-left: "#337ab7"
+    highlight-style: github
+
+    slide-number: c/t
+    progress: true
+    controls: true
+
+    transition: fade
+    background-transition: fade
+
+    center: true
+
+    toc: true
+    toc-depth: 2
+
+    code-line-numbers: true
+    code-overflow: wrap
+
+    fig-align: center
+
+    chalkboard: true
+    preview-links: auto
+execute:
+  warning: false
+  message: false
+  echo: true
+---
+
+# R软件的基本使用
+
+## RStudio软件界面介绍
+
+## 对象赋值与运行
+
+R语言的标准赋值符号是`<-`,快捷键为Alt+ -,也允许使用`=`进行赋值
+代码运行可以点击运行按钮，也可以用快捷键Ctrl+Enter键
+
+```{r}
+a <- 5
+a
+b <- 3
+print(b)
+```
+
+## 对象的基本运算
+```{r}
+a+b
+a-b
+```
+
+## 包的安装和使用
+
+R 包类似于Python 里的模块（module /package），就是别人提前写好、打包在一起的一堆现成 R 函数，拿来直接调用，不用自己从零写代码。
+```{r}
+#| eval: false
+# 安装包：ragg 是 R 的高质量位图绘图设备包
+install.packages("ragg")
+# 查看包的帮助说明
+?ggplot2
+```
+
+## 基本绘图
+```{r}
+plot(1:5,1:5,main="绘图测试")
+```
+
+# 数据类型
+
+[数据类型](../../images/data_structure.png)
+
+## 向量(Vector)
+
+向量是一维数组，通常可由c函数创建
+向量的数据类型可以是数值型、字符串或者逻辑型（TRUE或FALSE）
+
+R语言中向量的索引从1开始
+```{r}
+# 创建一个一维向量
+a <- c(2,5,8,3,9)
+# 提取a向量中第2位的元素
+a[2] #访问a向量中第2位的元素
+a[c(2,5)] #访问a向量中第2、5位的元素
+```
+
+## 向量的计算
+
+
+```{r}
+# 计算向量a的长度(元素个数)
+length(a)
+# 计算向量a的平均值
+mean(a)
+# 计算向量a的总和
+sum(a)
+```
+
+## 矩阵(Matrix) {.center .smaller}
+二维数组，其中的每个元素都是相同的数据类型
+
+### Matrix语法
+::: columns
+
+::: {.column width="48%"}
+
+**基本语法**
+
+```{r}
+#| eval: false
+matrix(
+  data, #数据，一般为向量
+  nrow, #几行
+  ncol, #几列
+  byrow = FALSE #是否按行填充,默认按列填充
+)
+```
+
+**常用参数**
+
+::: {.table-sm}
+| 参数 | 含义 |
+|------|------|
+| data | 放入矩阵中的数据 |
+| nrow | 行数 |
+| ncol | 列数 |
+| byrow | 是否按行填充 |
+:::
+:::
+
+
+::: {.column width="52%"}
+
+```{r}
+# 用matrix函数创建矩阵
+a<-1:6           # 生成1到6的数值向量
+mat<-matrix(a,   # 创建向量a的矩阵
+  nrow=2,ncol=3, # 矩阵行数为2，列数为3
+  byrow=TRUE)    # 按行填充矩阵的元素
+mat              # 显示矩阵mat
+# 给矩阵添加行名和列名
+rownames(mat)=c("甲","乙")   # 添加行名
+colnames(mat)=c("A","B","C")   # 添加行名
+# 用t函数对矩阵转置
+t(mat)                    # 矩阵转置
+```
+
+:::
+:::
+
+
+## 数组(Array)
+
+::: columns
+
+::: {.column width="48%"}
+
+与矩阵类似，但维数可以大于2
+```{r}
+#| eval: false
+array(
+  data,    # 数据，一般为向量
+  dim,     # 维度向量 c(行数,列数,层数...)
+  dimnames # 各维度名称，可选
+)
+
+```
+
+:::
+
+::: {.column width="52%"}
+```{r}
+# 创建数组
+dim1<-c("男","女")    # 指定第1个维度为2个元素
+dim2<-c("赞成","中立","反对")       # 指定第2个维度为3个元素
+dim3<-c("东部","西部","南部","北部")    # 指定第3个维度为4个元素
+data<-round(runif(24,50,100))      # 生成24个均匀分布的随机数，并取整
+d<-array(
+  data,    # 数据
+  c(2,3,4), # 三个维度的元素长度
+  dimnames=list(dim1,dim2,dim3) #三个维度的名称
+  ) # 创建数组并赋值给对象d
+```
+
+:::
+
+:::
+
+## 数据框(Data Frame)
+::: columns
+::: {.column width="48%"}
+数据框是R语言中最常用的数据类型之一，类似于Excel表格或SQL数据库中的表格。数据框可以包含不同类型的数据（数值型、字符型、逻辑型等），每列可以有不同的数据类型。
+
+### 语法
+```{r}
+#| eval: false
+data.frame(
+  col1,col2,col3,...
+)
+```
+
+
+:::
+::: {.column width="52%"}
+```{r}
+# 写入姓名和分数向量
+names<-c("刘文涛","王宇翔","田思雨","徐丽娜","丁文斌") # 写入学生姓名向量
+stat<-c(68,85,74,88,63)  # 写入各门课程分数向量
+math<-c(85,91,74,100,82)
+econ<-c(84,63,61,49,89)
+
+# 将向量组织成数据框形式
+table1_1<-data.frame(
+  学生姓名=names,
+  统计学=stat,
+  数学=math,
+  经济学=econ)
+ # 将数据组织成数据框形式，并储存在对象table1_1中
+table1_1   # 显示table1_1中的数据
+
+```
+
+:::
+
+:::
+
+## 数据框的基本操作
+
+::: columns
+
+::: {.column width="50%"}
+```{r}
+# 查看数据框前3行
+head(table1_1,3)
+# 查看数据框后3行
+tail(table1_1,3)
+# 查看数据框的结构
+str(table1_1)
+```
+:::
+
+::: {.column width="50%"}
+
+```{r}
+#| echo: false
+library(kableExtra)
+knitr::kable(table1_1, format="html") %>%
+  kable_styling(
+    font_size = 32, # 直接设置像素，12更小、16更大
+    full_width = FALSE
+  ) %>%
+  row_spec(seq(2,nrow(table1_1),2), background="#2b2b2b") #深色斑马行，适配league黑色背景
+
+```
+
+:::
+
+:::
+
+## 数据框的索引
+::: columns
+
+::: {.column width="50%"}
+```{r}
+# 查看数据框的行数和列数
+dim(table1_1)
+# 查看数据框的行数
+nrow(table1_1)
+# 查看数据框的列数
+ncol(table1_1)
+# 查看数据框的列名
+colnames(table1_1)
+# 查看数据框的行名
+rownames(table1_1)  
+# 访问数据框中第2行第3列的元素
+table1_1[2,3]
+```
+:::
+::: {.column width="50%"}
+
+```{r}
+#| echo: false
+library(kableExtra)
+knitr::kable(table1_1, format="html") %>%
+  kable_styling(
+    font_size = 32, # 直接设置像素，12更小、16更大
+    full_width = FALSE
+  ) %>%
+  row_spec(seq(2,nrow(table1_1),2), background="#2b2b2b") #深色斑马行，适配league黑色背景
+
+```
+
+:::
+
+## 数据框的基本操作-dplyr包
+
+dplyr提供了多个数据处理函数，并提供了管道操作符“%>%”可以连续操作数据
+
++ select函数可选择列变量
+
++ mutate可以创建一个新列、修改列
+
+
+
+
+
+
+
+## 测试
+::: columns
+
+::: {.column width="48%"}
+### 左侧内容
+
+这里放左侧内容。
+:::
+
+::: {.column width="52%"}
+### 右侧内容
+
+这里放右侧内容。
+:::
+
+:::

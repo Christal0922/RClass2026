@@ -1,7 +1,7 @@
 ---
-title: "R语言与数据可视化 第2章：数据操作"
-subtitle: "面向数据科学专业的实践教学"
-author: "数据科学与大数据技术系"
+title: "第2章：数据操作"
+subtitle: "R语言与数据可视化 "
+author: "葛倩倩"
 date: today
 format:
   html:
@@ -21,16 +21,11 @@ execute:
 
 ::: {.callout-note}
 ## 学习目标
-
-完成本章学习后，你将能够：
-
 - 掌握R语言基础数据结构的创建和操作
-- 熟练使用dplyr包的6个核心函数进行数据处理
-- 为后续ggplot2可视化准备整洁的数据
-- 建立从数据导入到可视化的完整工作流程
+- 熟练使用dplyr包的核心函数进行排序、清理等数据预处理
+- 能够读取csv格式文件并进行基本的数据清理
 :::
 
-本章将用2个课时（100分钟）学习R语言数据操作，重点是实践操作。考虑到大家有Python基础，我们会通过对比来帮助理解。
 
 ## 第一课时：R语言数据结构与tidyverse入门 {#lesson1}
 
@@ -49,21 +44,15 @@ execute:
 library(tidyverse)
 library(palmerpenguins)
 
-# 设置中文输出
+# 设置3位小数
 options(pillar.sigfig = 3)
 ```
 
 ### R语言数据结构快速入门 {#data-structures}
 
-#### Python vs R：数据结构对比
+#### R语言中基本数据结构
 
-如果你熟悉Python，可以这样理解R的数据结构：
-
-| Python | R语言 | 用途 |
-|--------|-------|------|
-| list | vector（向量） | 存储同类型数据 |
-| dict | named vector | 键值对数据 |
-| pandas DataFrame | data.frame/tibble | 表格数据 |
+![R数据结构](../images/data_structure.png)
 
 #### 创建向量（相当于Python的list）
 

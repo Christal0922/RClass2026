@@ -1,0 +1,20 @@
+---
+title: "R 与 Python 混合示例"
+format: html
+engine: knitr
+---
+
+```{r}
+x <- c(10, 20, 30)
+mean(x)
+```
+
+```{python}
+print("Python 计算结果：")
+# 这里的 r.x 是 Python 代码块读取前面创建的 R 对象 x；反过来，R 可以通过 reticulate::py$变量名 读取 Python 对象。
+print(sum(r.x)) 
+```
+
+```{r}
+cat("回到 R 继续计算：", sum(x))
+```

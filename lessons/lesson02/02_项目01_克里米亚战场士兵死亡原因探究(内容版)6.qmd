@@ -1,0 +1,625 @@
+---
+title: "项目01：克里米亚战场士兵死亡原因探究"
+subtitle: "内容版6｜完整代码、计算结果与参考解读"
+lang: zh-CN
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-copy: true
+    code-overflow: wrap
+    embed-resources: true
+fig-width: 9
+fig-height: 5
+fig-dpi: 144
+knitr:
+  opts_chunk:
+    dev: ragg_png
+execute:
+  echo: true
+  warning: false
+  message: false
+  error: false
+  cache: false
+editor: source
+---
+
+**版本说明：**本文件与空白版6对应，提供完整代码和参考答案。数值由 `chapter02.RData` 计算；开放性问题的回答为示例。
+
+本项目依次完成四项任务：**比较死亡人数 → 定位高值月份 → 比较阶段变化 → 评价图形表达**。每项任务都按“分析目的—数据映射—图形建构—图表解读”展开，最终形成有数值证据和明确局限的项目结论。任务2后安排“巩固提升”，通过基础、进阶和挑战任务检验学习成果。
+
+**使用说明：**将本文件与 `chapter02.RData` 放在同一目录，按顺序运行代码或直接渲染为HTML。安装代码默认不执行，其余代码均可执行。任务4的两段代码需依次运行。
+
+# 项目背景
+
+## 情境与目标
+
+克里米亚战争期间，英军面临战伤、疾病和其他原因造成的死亡。南丁格尔通过分析与展示军队健康资料，使疾病及卫生条件问题得到重视。本项目使用 `chapter02.RData` 中的南丁格尔数据（原始来源为 `HistData::Nightingale`），探究1854年4月至1856年3月英军的死亡情况。[数据与背景来源](https://friendly.github.io/HistData/reference/Nightingale.html)
+
+**项目问题：哪一种死因造成的死亡人数最多？不同月份和阶段的死亡率有何差异？怎样用图形呈现证据，为卫生工作的改进提供参考？**
+
+完成项目后，应能选择合适指标、解释ggplot2的数据映射、绘制证据图，并用“结论—证据—建议—局限”表达分析结果。
+
+**参考假设：**可预防疾病可能造成最多死亡；这一假设来自项目情境，仍需比较三类死因的总死亡人数来检验。
+
+## 数据与指标
+
+| 内容 | 本项目约定 |
+|---|---|
+| 研究范围 | 本数据记录的英军，共24个月 |
+| 第1阶段 | 1854年4月至1855年3月 |
+| 第2阶段 | 1855年4月至1856年3月 |
+| 死亡原因 | 可预防疾病、战伤、其他原因 |
+| 长表一行 | 某个月份、某类死因的一条记录 |
+| 月份顺序 | 每个阶段均从4月排至次年3月 |
+| 军队人数 | 当月军队平均人数的估计值 |
+
+1855年3月是卫生改善开始的过渡月份，包含在第1阶段中。“改革前后”在本项目中指上述两个历史区段；两阶段差异不能单独证明卫生措施的因果效果。[阶段说明](https://friendly.github.io/HistData/reference/Nightingale.html)
+
+$$
+\text{月死亡率（每千人）}
+=\frac{\text{当月死亡人数}}{\text{当月军队人数}}\times1000
+$$
+
+- **总死亡人数：**按分组汇总的死亡人数，单位为人；任务1为某类死因在第1阶段12个月的人数之和，月度汇总表中为某个月三类死因的人数之和。
+- **平均月死亡率：**同一阶段12个月月死亡率的算术平均，每个月权重相同；任务3采用此口径。
+- **月死亡率：**长表 `nightingale_long` 及其阶段子集中表示某类死因的月死亡率；月度汇总表 `n_summary_month` 及其阶段子集中表示三类死因合计的月死亡率。两者单位均为每千人，由所用数据框区分。
+- **指标区别：**任务1比较死亡人数；任务2—4使用月死亡率或其等权平均值。年化死亡率与月死亡率不同，等权均值也不能与按军队人数加权的阶段率混用。
+
+## 数据准备
+
+将本文件与 `chapter02.RData` 放在同一目录。首次缺包时运行安装代码，再运行数据准备代码。
+
+沿用数据集中的 `nightingale`、`nightingale_long`、`nightingale_before`、`nightingale_after` 和 `n_summary_before`。准备代码为长表补充 `月死亡率`，调整 `月份` 的显示顺序，并生成各任务所需的汇总表。
+
+```{r}
+#| label: install-packages
+#| eval: false
+install.packages(c("tidyverse", "knitr", "rmarkdown", "ragg"))
+```
+
+```{r}
+#| label: prepare-data
+#| code-fold: true
+#| code-summary: "展开数据准备代码"
+library(tidyverse)
+load("chapter02.RData")
+
+cause_colors <- c("可预防疾病" = "#56B4E9",
+                  "战伤" = "#E69F00",
+                  "其他原因" = "#777777")
+stage_labels <- c("第1阶段" = "第1阶段（1854.04—1855.03）",
+                  "第2阶段" = "第2阶段（1855.04—1856.03）")
+month_order <- c(4:12, 1:3)
+
+# 沿用长表的中文列名；补充月死亡率，并用“月份”列显示4月至次年3月。
+nightingale_long <- nightingale_long %>%
+  arrange(日期, 死亡原因) %>%
+  mutate(
+    月份 = factor(as.integer(format(日期, "%m")),
+                  levels = month_order,
+                  labels = paste0(month_order, "月")),
+    月死亡率 = 死亡人数 / 军队人数 * 1000
+  )
+nightingale_before <- nightingale_long %>% filter(阶段 == "第1阶段")
+nightingale_after <- nightingale_long %>% filter(阶段 == "第2阶段")
+
+# 任务1：直接使用已载入的 n_summary_before。
+# 其列为 死亡原因、总死亡人数、平均年化死亡率；本任务使用总死亡人数。
+
+# 任务2、3：每月合计三类死因。军队人数在长表中重复记录，只取一次。
+n_summary_month <- nightingale_long %>%
+  group_by(日期, 月份, 阶段) %>%
+  summarise(军队人数 = first(军队人数),
+            总死亡人数 = sum(死亡人数), .groups = "drop") %>%
+  mutate(月死亡率 = 总死亡人数 / 军队人数 * 1000)
+n_summary_month_before <- n_summary_month %>% filter(阶段 == "第1阶段")
+
+# 任务3：按阶段和死因计算等权平均月死亡率。
+n_summary_stage <- nightingale_long %>%
+  group_by(阶段, 死亡原因) %>%
+  summarise(平均月死亡率 = mean(月死亡率), .groups = "drop")
+
+# 任务4：筛选可预防疾病，用同一份数据比较柱形图与玫瑰图。
+nightingale_disease <- nightingale_long %>% filter(死亡原因 == "可预防疾病")
+disease_rate_max <- max(nightingale_disease$月死亡率)
+
+# 仅在展示时设置小数位，统计计算仍保留原始精度。
+fmt_num <- function(x, digits = 2) {
+  formatC(x, format = "f", digits = digits, big.mark = ",")
+}
+fmt_month <- function(x) format(x, "%Y-%m")
+
+plot_family <- if (.Platform$OS.type == "windows") "Microsoft YaHei" else "sans"
+theme_set(theme_minimal(base_size = 12, base_family = plot_family))
+theme_update(legend.position = "bottom")
+```
+
+| 任务 | 使用的数据 |
+|---|---|
+| 任务1 | `n_summary_before`：已载入的第1阶段死因汇总表，使用 `总死亡人数` |
+| 任务2 | `nightingale_before`：第1阶段按死因记录的月度长表；`n_summary_month_before`：三类死因合计的月度核验表 |
+| 巩固提升 | 复用 `p2` 观察各死因的月度变化、调整配色；复用 `p1` 添加人数标签 |
+| 任务3 | `nightingale_long`：全部长表；`n_summary_stage`：阶段均值；`n_summary_month`：三类死因合计的月度核验表 |
+| 任务4 | `nightingale_disease`：两个阶段的可预防疾病记录，用于两种图形的同数据比较 |
+
+`nightingale_long` 的主要列为 `日期`、`月份`、`年份`、`军队人数`、`阶段`、`死亡原因`、`死亡人数`、`年化死亡率`，准备后增加 `月死亡率`。保留的 `年化死亡率` 与汇总表中的 `平均年化死亡率` 不用于本项目的月度图。
+
+可用 `head(nightingale_long)`、`str(nightingale_long)` 查看数据。**长表的一行表示：**某个月份、某类死因的一条记录，包含当月军队人数、该死因死亡人数及对应死亡率。
+
+# 新知探究
+
+## ggplot2语法框架
+
+ggplot2先指定数据，再建立变量与视觉属性的映射，最后通过图层组织图形。
+
+```r
+ggplot(data = 数据框,
+       aes(x = 横轴变量, y = 纵轴变量, fill = 分类变量)) +
+  geom_col() +
+  labs(title = "图形标题", x = "横轴含义", y = "纵轴指标及单位") +
+  facet_wrap(~ 分组变量) +  # 需要分组比较时添加
+  theme_minimal()
+```
+
+## 核心内容
+
+| 内容 | 主要作用 |
+|---|---|
+| `ggplot(data = …)` | 指定数据框 |
+| `aes(x, y, fill)` | 把变量映射到位置、长度和填充颜色 |
+| `geom_col()` | 将已有数值绘制为柱高；`geom_bar()` 默认统计记录数 |
+| `labs()` | 添加标题、坐标轴和图例标签 |
+| `facet_wrap()` | 按分类变量分面；比较数值高低时保持相同尺度 |
+| `coord_polar()` | 转为极坐标；面积编码的具体要求见任务4 |
+| `theme_minimal()` | 调整整体外观，不改变数据 |
+
+**映射与固定属性：**`aes(fill = 死亡原因)` 用颜色表达变量；`geom_col(fill = "steelblue")` 将全部柱子设为固定颜色。标题和单位应与实际映射的变量一致。[柱形图说明](https://ggplot2.tidyverse.org/reference/geom_bar.html)
+
+# 项目任务
+
+## 任务1：哪一种死亡原因造成的死亡人数最多？
+
+### 分析目的
+
+比较第1阶段（1854年4月至1855年3月）三类死因的**总死亡人数**，找出造成死亡人数最多的原因。比较范围固定为这12个月，单位为人。
+
+### 数据映射
+
+使用数据框 `n_summary_before`，每一行对应一种死因的阶段汇总结果。
+
+| 数据变量 | 视觉通道 | 代码映射 |
+|---|---|---|
+| 死亡原因 | 横轴位置 | `x = 死亡原因` |
+| 总死亡人数 | 柱形高度 | `y = 总死亡人数` |
+| 死亡原因 | 填充颜色 | `fill = 死亡原因` |
+
+### 图形建构
+
+使用 `geom_col()` 让柱高直接表示已有的总死亡人数。`geom_bar()` 默认统计数据行数，不适合直接绘制这张汇总表。
+
+```{r}
+#| label: task1-plot
+p1 <- ggplot(
+  data = n_summary_before,
+  aes(x = 死亡原因, y = 总死亡人数, fill = 死亡原因)
+) +
+  geom_col() +
+  labs(
+    title = "第1阶段不同死亡原因的死亡人数",
+    subtitle = "1854年4月至1855年3月",
+    x = NULL, y = "总死亡人数（人）", fill = "死亡原因"
+  )
+p1
+
+n_summary_before %>%
+  select(死亡原因, 总死亡人数) %>%
+  knitr::kable(caption = "第1阶段各死因的总死亡人数")
+
+# 提取参考解读所需的数值。
+disease_deaths <- n_summary_before %>%
+  filter(死亡原因 == "可预防疾病") %>% pull(总死亡人数)
+wound_deaths <- n_summary_before %>%
+  filter(死亡原因 == "战伤") %>% pull(总死亡人数)
+```
+
+### 图表解读
+
+**结论：**第1阶段，可预防疾病造成的死亡人数最多。
+
+**证据：**可预防疾病共造成 `r fmt_num(disease_deaths, 0)` 人死亡，战伤为 `r fmt_num(wound_deaths, 0)` 人；前者比后者多 `r fmt_num(disease_deaths - wound_deaths, 0)` 人。柱高与汇总表对应。
+
+**思考：**仅看各类死因的总人数，不能知道死亡主要发生在哪些月份。需要将阶段总量展开到月份，再考虑各月军队人数不同带来的影响。
+
+## 任务2：高死亡水平是否集中在个别月份？
+
+### 分析目的
+
+**主要解决的问题：第1阶段哪些月份的总体死亡水平较高，这些月份是否相邻，主要由哪类死因贡献？**
+
+本任务使用月死亡率进行跨月比较，将**三类死因合计的月死亡率最高的3个月**作为高值月份，检查它们的时间分布。
+
+> 观察的时间单位是月，指标是月死亡率（每千人）。判断高值是否集中，要看最高3个月是否在时间上相邻，而不只是比较柱形高度。
+
+### 数据映射
+
+| 需要表达的信息 | 使用变量 | 视觉通道 |
+|---|---|---|
+| 月份先后 | 月份 | 横轴位置，按4月至次年3月排列 |
+| 某月某类死因的死亡水平 | 月死亡率 | 该死因色块的高度 |
+| 不同死因的贡献 | 死亡原因 | 填充颜色 |
+
+绘图使用 `nightingale_before`。同月三类死因的分母相同，可以将月死亡率相加；整根柱的总高度表示三类死因合计的月死亡率，颜色区分死因。
+
+### 图形建构
+
+先制作月度堆叠柱形图，再用 `n_summary_month_before` 核验高值月份与最高、最低值。
+
+```{r}
+#| label: task2-plot
+p2 <- ggplot(
+  data = nightingale_before,
+  aes(x = 月份, y = 月死亡率, fill = 死亡原因)
+) +
+  geom_col() +
+  scale_fill_manual(values = cause_colors) +
+  labs(
+    title = "第1阶段各月死亡水平与死因构成",
+    subtitle = "1854年4月至1855年3月；柱形总高度表示三类死因合计",
+    x = NULL, y = "月死亡率（每千人）", fill = "死亡原因",
+    caption = "数据：chapter02.RData；原始来源：HistData::Nightingale"
+  )
+p2
+```
+
+```{r}
+#| label: task2-evidence
+# 先按月死亡率选出最高3个月，再按日期展示。
+n_summary_high_months <- n_summary_month_before %>%
+  slice_max(order_by = 月死亡率, n = 3, with_ties = FALSE) %>%
+  arrange(日期)
+n_summary_high_months %>%
+  select(日期, 月死亡率) %>%
+  knitr::kable(digits = 2, caption = "最高3个月：三类死因合计月死亡率（每千人）")
+
+n_summary_peak_month <- n_summary_month_before %>%
+  slice_max(月死亡率, n = 1, with_ties = FALSE)
+n_summary_low_month <- n_summary_month_before %>%
+  slice_min(月死亡率, n = 1, with_ties = FALSE)
+
+# 回到按死因记录的长表，核验高值月份的死因构成。
+n_summary_high_causes <- nightingale_before %>%
+  semi_join(n_summary_high_months, by = "日期") %>%
+  select(日期, 死亡原因, 月死亡率) %>%
+  pivot_wider(names_from = 死亡原因, values_from = 月死亡率) %>%
+  arrange(日期)
+n_summary_high_causes %>%
+  knitr::kable(digits = 2, caption = "高值月份各死因的月死亡率（每千人）")
+```
+
+### 图表解读
+
+| 证据项目 | 参考记录 |
+|---|---|
+| 最高3个月（按时间排序） | `r paste(fmt_month(n_summary_high_months$日期), collapse = "、")` |
+| 三个月是否相邻 | 是，为连续的12月、次年1月和2月 |
+| 最高月及月死亡率 | `r fmt_month(n_summary_peak_month$日期)`；`r fmt_num(n_summary_peak_month$月死亡率)`（每千人） |
+| 最低月及月死亡率 | `r fmt_month(n_summary_low_month$日期)`；`r fmt_num(n_summary_low_month$月死亡率)`（每千人） |
+| 最高月与最低月的差值 | `r fmt_num(n_summary_peak_month$月死亡率 - n_summary_low_month$月死亡率)`（每千人） |
+| 高值月份的主要死因及核验依据 | 可预防疾病；上表中每个高值月份的该死因月死亡率均最高 |
+
+> **结论与证据：**按最高3个月识别高值，第1阶段的高死亡水平集中在1854年12月至1855年2月，三个高值月份均以可预防疾病为主要死因。  
+> **解释边界：**气候、营地卫生和战事等都可以作为进一步调查的线索，但本数据没有这些变量。一个阶段的相邻高值月份不足以确认原因，也不能证明稳定的季节规律。
+
+**成果检查：**图中包含12个月且顺序正确；高值月份、极值和差值均可从数据核验；观察结果与原因解释分开表述。
+
+## 巩固提升
+
+以下为基础、进阶和挑战任务的参考实现。
+
+### 基础任务（★）：不同死因的月度变化是否一致？
+
+在 `p2` 上按 `死亡原因` 分面，分别观察三类死因。保持相同纵轴尺度，便于比较变化幅度。
+
+```{r}
+#| label: consolidation-basic
+#| fig-height: 7
+p_month <- p2 +
+  facet_wrap(~ 死亡原因, ncol = 1, scales = "fixed") +
+  labs(
+    title = "第1阶段不同死因的月度变化",
+    subtitle = "各面板使用相同纵轴尺度，柱高表示该死因的月死亡率"
+  )
+p_month
+
+n_summary_cause_peaks <- nightingale_before %>%
+  group_by(死亡原因) %>%
+  slice_max(月死亡率, n = 1, with_ties = FALSE) %>%
+  ungroup() %>%
+  select(死亡原因, 日期, 月死亡率)
+n_summary_cause_peaks %>%
+  knitr::kable(digits = 2, caption = "第1阶段各死因的最高月死亡率（每千人）")
+```
+
+**参考解读：**三类死因的月死亡率都随月份变化，但峰值月份不同：可预防疾病在1855年1月，战伤在1854年11月，其他原因在1855年2月。总体高值月份不能替代每一类死因自身的变化规律。
+
+### 进阶任务（★★）：修改填充颜色
+
+通过命名颜色向量，为三类死因指定容易区分的填充颜色。
+
+```{r}
+#| label: consolidation-advanced
+#| fig-height: 7
+my_cause_colors <- c(
+  "可预防疾病" = "#0072B2",
+  "战伤" = "#D55E00",
+  "其他原因" = "#777777"
+)
+p_month_color <- p_month +
+  scale_fill_manual(values = my_cause_colors)
+p_month_color
+```
+
+**参考说明：**`aes(fill = 死亡原因)` 决定颜色表示什么变量，`scale_fill_manual()` 指定每类死因的实际颜色。替换填充色标会改变配色，柱高、峰值月份及分析结论保持一致；`colour` 用于设置边框颜色。
+
+### 挑战任务（★★★）：添加数据标注
+
+为任务1的柱形图添加总死亡人数标签，并为柱顶文字留出空间。
+
+```{r}
+#| label: consolidation-challenge
+p1_label <- p1 +
+  geom_text(
+    aes(label = format(总死亡人数, big.mark = ",", scientific = FALSE,
+                       trim = TRUE)),
+    vjust = -0.5, size = 4
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.12)))
+p1_label
+```
+
+**参考说明：**标签来自 `总死亡人数`，单位为人，按整数显示并与任务1汇总表一致。`vjust = -0.5` 将文字放在柱顶上方，顶部留白避免文字被裁切；柱形纵轴仍从零开始。
+
+**引出下一问：**第1阶段的模式在第2阶段是否仍然存在？
+
+## 任务3：卫生改革前后发生了什么变化？
+
+### 分析目的
+
+**主要解决的问题：两个阶段的月度死亡水平与死因构成有何差异，同一种死因的平均水平变化了多少？**
+
+沿用任务2的指标和映射，增加第2阶段数据，比较变化并核查例外情况。
+
+> 比较区段为1854年4月至1855年3月与1855年4月至1856年3月。参考假设是第2阶段可预防疾病的死亡率下降；需要通过同尺度分面图、阶段均值和同名月份比较来检验。
+
+### 数据映射
+
+| 变量 | 图形中的作用 | ggplot2写法 |
+|---|---|---|
+| 月份 | 组织各阶段内的月份顺序 | `x = 月份` |
+| 月死亡率 | 表达各死因死亡水平 | `y = 月死亡率` |
+| 死亡原因 | 区分死因构成 | `fill = 死亡原因` |
+| 阶段 | 将两个区段分别展示 | `facet_wrap(~ 阶段)` |
+
+两个面板保持相同的纵轴尺度、相同的月份顺序和相同的颜色含义。
+
+### 图形建构
+
+使用全部长表，按阶段分面。选择可预防疾病，比较两阶段的等权平均月死亡率。
+
+```{r}
+#| label: task3-plot
+#| fig-height: 7
+p3 <- ggplot(
+  data = nightingale_long,
+  aes(x = 月份, y = 月死亡率, fill = 死亡原因)
+) +
+  geom_col() +
+  facet_wrap(~ 阶段, ncol = 1, scales = "fixed",
+             labeller = labeller(阶段 = stage_labels)) +
+  scale_fill_manual(values = cause_colors) +
+  labs(
+    title = "两阶段各月死亡水平与死因构成比较",
+    subtitle = "两阶段均按4月至次年3月排列；纵轴尺度一致",
+    x = NULL, y = "月死亡率（每千人）", fill = "死亡原因",
+    caption = "数据：chapter02.RData；原始来源：HistData::Nightingale"
+  )
+p3
+```
+
+```{r}
+#| label: task3-evidence
+n_summary_stage %>%
+  pivot_wider(names_from = 阶段, values_from = 平均月死亡率) %>%
+  knitr::kable(digits = 2, caption = "各死因在两阶段的平均月死亡率（每千人）")
+
+n_summary_compare <- n_summary_stage %>%
+  filter(死亡原因 == "可预防疾病") %>%
+  select(阶段, 平均月死亡率) %>%
+  pivot_wider(names_from = 阶段, values_from = 平均月死亡率) %>%
+  mutate(
+    绝对变化 = 第2阶段 - 第1阶段,
+    相对变化百分比 = (第2阶段 - 第1阶段) / 第1阶段 * 100
+  )
+n_summary_compare %>%
+  knitr::kable(digits = 2, caption = "可预防疾病：平均月死亡率及变化（率与绝对变化为每千人，相对变化为%）")
+
+# 核查三类死因合计的月死亡率：正值表示第2阶段同名月份更高。
+n_summary_month_compare <- n_summary_month %>%
+  select(月份, 阶段, 月死亡率) %>%
+  pivot_wider(names_from = 阶段, values_from = 月死亡率) %>%
+  mutate(变化 = 第2阶段 - 第1阶段)
+n_summary_month_compare %>%
+  knitr::kable(digits = 2, caption = "同名月份的合计月死亡率比较（每千人）")
+
+n_summary_month_exceptions <- n_summary_month_compare %>%
+  filter(变化 > 0)
+```
+
+绝对变化单位为每千人，相对变化单位为%；正值表示上升，负值表示下降。计算保留原始精度，展示时保留2位小数；基期为零时不能直接计算相对变化。
+
+### 图表解读
+
+| 证据项目 | 参考结果 |
+|---|---|
+| 所选死因 | 可预防疾病 |
+| 第1阶段／第2阶段平均月死亡率 | `r fmt_num(n_summary_compare$第1阶段)`／`r fmt_num(n_summary_compare$第2阶段)`（每千人） |
+| 绝对变化／相对变化 | `r fmt_num(n_summary_compare$绝对变化)`（每千人）／`r fmt_num(n_summary_compare$相对变化百分比)`% |
+| 第2阶段是否每个同名月份都更低 | 否，`r paste(as.character(n_summary_month_exceptions$月份), collapse = "、")`的合计月死亡率更高 |
+| 一个反例及两个数值 | 4月：第1阶段为`r fmt_num(n_summary_month_compare$第1阶段[n_summary_month_compare$月份 == "4月"])`，第2阶段为`r fmt_num(n_summary_month_compare$第2阶段[n_summary_month_compare$月份 == "4月"])`（每千人） |
+
+**死因构成观察：**可预防疾病在两个阶段的平均月死亡率均为三类中最高；第1阶段其他原因高于战伤，第2阶段则战伤高于其他原因。上方各死因的阶段均值表可核验这一排序变化。
+
+> **结论：**第2阶段可预防疾病的平均月死亡率低于第1阶段，但并非每个同名月份的合计月死亡率都更低。  
+> **证据：**可预防疾病的平均月死亡率由 `r fmt_num(n_summary_compare$第1阶段)` 变为 `r fmt_num(n_summary_compare$第2阶段)`（每千人），下降约 `r fmt_num(-n_summary_compare$相对变化百分比)`%。4—6月的合计月死亡率比较构成反例。  
+> **谨慎表达：**阶段平均值下降不等于每个月都下降。数据未控制战事强度、军队构成和转移、气候等同期变化，因此不能将全部下降归因于卫生改革。
+
+**成果检查：**每阶段12个月且尺度一致；均值口径相同；变化量准确；阶段差异与因果效果分开表述。
+
+**引出下一问：**怎样把这些发现准确地呈现给分析人员和普通公众？
+
+## 任务4：玫瑰图适合分析还是传播？
+
+### 分析目的
+
+**主要解决的问题：面对精确分析和公众展示两种目的，柱形图与玫瑰图各有什么优势、限制和适用条件？**
+
+两种图均使用可预防疾病的24个月数据，保持数据、指标、阶段和数值范围一致。这个单死因示例用于评价表达方式，不用于读取三类死因构成。
+
+> 面向分析人员，需要精确比较月份、阶段和数值差异。面向普通公众，需要解释死亡率在月份间分布不均、两阶段差异明显，同时避免造成数值误读。
+
+### 数据映射
+
+| 数据或设置 | 柱形图中的表达 | 玫瑰图中的表达 |
+|---|---|---|
+| 月份 | 横轴位置 | 等角扇形的角度位置 |
+| 月死亡率 | 柱形高度 | 扇形面积 |
+| 阶段 | 分面 | 分面 |
+| 固定颜色 | 表明同一种死因，不映射额外变量 | 表明同一种死因，不映射额外变量 |
+
+等角扇形面积满足 $A=\frac12\theta r^2$。使用 `scale_y_sqrt()` 使半径对应死亡率的平方根，配合零起点和相同尺度，让扇形面积与死亡率成正比。
+
+**参考解释：**柱形图通过从零开始的长度表达数值，玫瑰图通过等角扇形面积表达数值；半径为2倍时面积为4倍，不能把半径倍数直接当作死亡率倍数。
+
+### 图形建构
+
+先构建共同的基础图形，再分别使用直角坐标与极坐标。两段代码依次运行。
+
+```{r}
+#| label: task4-bar
+#| fig-width: 11
+#| fig-height: 5.5
+p4_base <- ggplot(
+  data = nightingale_disease,
+  aes(x = 月份, y = 月死亡率)
+) +
+  geom_col(width = 1, fill = cause_colors[["可预防疾病"]],
+           colour = "white") +
+  facet_wrap(~ 阶段, ncol = 2, scales = "fixed",
+             labeller = labeller(阶段 = stage_labels)) +
+  scale_x_discrete(drop = FALSE, expand = expansion(add = 0.5)) +
+  labs(x = NULL, y = "月死亡率（每千人）",
+       caption = "同一死因、同一数据范围；数据：chapter02.RData；原始来源：HistData::Nightingale")
+
+p4_bar <- p4_base +
+  scale_y_continuous(
+    limits = c(0, disease_rate_max),
+    expand = expansion(mult = 0)
+  ) +
+  labs(title = "可预防疾病：两阶段月死亡率的柱形表达")
+p4_bar
+```
+
+```{r}
+#| label: task4-rose
+#| fig-width: 11
+#| fig-height: 5.5
+p4_rose <- p4_base +
+  scale_y_sqrt(
+    limits = c(0, disease_rate_max),
+    expand = expansion(mult = 0)
+  ) +
+  coord_polar(theta = "x") +
+  labs(
+    title = "可预防疾病：两阶段月死亡率的玫瑰图表达",
+    subtitle = "单死因示例；扇形面积表示月死亡率（每千人）",
+    y = NULL
+  )
+p4_rose
+
+# 查数据核验第1阶段1月与2月的实际差值。
+nightingale_pair <- nightingale_disease %>%
+  filter(日期 %in% as.Date(c("1855-01-01", "1855-02-01"))) %>%
+  arrange(日期) %>%
+  select(日期, 月死亡率)
+nightingale_pair %>%
+  knitr::kable(digits = 2, caption = "两种图形共同使用的数值（每千人）")
+disease_rate_difference <- nightingale_pair$月死亡率[1] -
+  nightingale_pair$月死亡率[2]
+```
+
+本例每月只有一种死因。多死因堆叠图不能直接套用平方根尺度，因为变换发生在堆叠之前；覆盖叠放也可能遮挡。这里的玫瑰图不是历史原图的精确复刻。[堆叠说明](https://ggplot2.tidyverse.org/reference/position_stack.html)
+
+### 图表解读
+
+选择第1阶段的1855年1月与2月，实际月死亡率分别为 `r fmt_num(nightingale_pair$月死亡率[1])` 和 `r fmt_num(nightingale_pair$月死亡率[2])`（每千人），相差 `r fmt_num(disease_rate_difference)`（每千人）。
+
+**参考评价：**柱形图可沿共同方向比较柱顶位置；玫瑰图需要比较朝向不同的扇形面积，精确估计差值通常更困难。这里不预设学生的实际估读误差；课堂上可先记录两图的估读差值，再分别计算“估读差值减去实际差值”的绝对值。
+
+| 比较维度 | 柱形图：评价与理由 | 玫瑰图：评价与理由 |
+|---|---|---|
+| 精确比较数值与差值 | 同向长度与共同基线便于比较；适合作为分析证据图 | 面积与方向共同影响比较，精确估差更困难 |
+| 观察月份顺序与阶段差异 | 时间顺序线性清楚，统一尺度有利于比较阶段 | 环状排列展示月份分布，但布局本身不能证明季节规律 |
+| 向非专业读者解释及可能的误读 | 柱高含义直观，仍须说明指标和单位 | 可作为补充展示，需说明面积编码，避免把半径比误读为死亡率比 |
+
+> **分析报告：**采用柱形图，便于比较月份和阶段间的数值差异。  
+> **公众展示：**可以辅以玫瑰图，但须解释面积编码、统一尺度，并配合关键数值。  
+> **必须说明：**扇形面积表示月死亡率，单位为每千人。哪种图更容易被公众理解，需要实际读者测试，不能仅凭单人的读图判断。
+
+**成果检查：**两图数据一致；玫瑰图面积编码准确；评价有依据；图形选择与受众及使用目的对应。
+
+# 项目总结
+
+## 汇总证据，回答项目问题
+
+| 任务 | 主要发现 | 支持发现的数值或观察 |
+|---|---|---|
+| 任务1：比较死亡人数 | 可预防疾病为第1阶段主要死因 | 死亡`r fmt_num(disease_deaths, 0)`人，高于战伤的`r fmt_num(wound_deaths, 0)`人 |
+| 任务2：定位高值月份 | 高值集中于连续三个月 | 1854-12至1855-02；最高月合计月死亡率为`r fmt_num(n_summary_peak_month$月死亡率)`（每千人） |
+| 任务3：比较阶段变化 | 可预防疾病平均月死亡率下降，但月度比较有例外 | 阶段均值下降`r fmt_num(-n_summary_compare$相对变化百分比)`%；第2阶段4—6月合计月死亡率更高 |
+| 任务4：评价图形表达 | 分析优先采用柱形图，玫瑰图可作补充展示 | 同一对月份的实际差值为`r fmt_num(disease_rate_difference)`（每千人），两图以不同视觉通道表达 |
+
+**项目结论示例（180—250字）：**
+
+::: {#project-conclusion}
+第1阶段，可预防疾病造成`r fmt_num(disease_deaths, 0)`人死亡。三类死因合计月死亡率最高的3个月为1854年12月至1855年2月，1855年1月达到`r fmt_num(n_summary_peak_month$月死亡率)`（每千人）。可预防疾病的平均月死亡率由`r fmt_num(n_summary_compare$第1阶段)`降至`r fmt_num(n_summary_compare$第2阶段)`（每千人），下降`r fmt_num(-n_summary_compare$相对变化百分比)`%；但第2阶段4—6月的合计月死亡率更高。建议优先重视疾病预防与卫生改善，持续监测月度变化。分析报告宜用柱形图，公众展示可辅以说明面积编码的玫瑰图。数据未控制战事和军队构成等同期变化，不能将下降全部归因于卫生改革。
+:::
+
+## 方法反思与核验
+
+- **分析目的决定图形选择：**比较累计人数使用死因柱形图；查找高值月份使用月度图；比较阶段时统一尺度；公众展示还需考虑指标是否容易被误读。
+- **参考假设的检验：**数据支持“第1阶段可预防疾病造成最多死亡”，但不能据此解释所有月份的变化原因。
+- **后续改进方向：**补充卫生措施实施时间、战事强度和军队构成等资料，并通过实际读者反馈评价图形表达效果。
+
+**可选AI提示：**“请根据我提供的图表、数值与结论，检查单位、比较范围、面积编码和因果措辞。最多指出两处问题并给出核验方法，不补充未提供的数值。”
+
+以下是可复核的核验方法示例，不代替学生自己的过程记录。
+
+| 核验项目 | 核验方法 | 本例应得到的结果 |
+|---|---|---|
+| 任务1死亡人数 | 按死因汇总 `nightingale_before$死亡人数`，与 `n_summary_before` 比较 | 三类总死亡人数一致 |
+| 月度合计死亡率 | 将同月三类死因的月死亡率相加，与 `n_summary_month` 比较 | 结果一致；军队人数只取一次 |
+| 阶段变化 | 用未四舍五入的均值代入相对变化公式 | 可预防疾病下降约`r fmt_num(-n_summary_compare$相对变化百分比)`% |
+| 图形表达 | 对照柱形图和玫瑰图使用的数据、范围和尺度 | 两图数据相同，长度编码与面积编码不同 |
+
+## 成果自查
+
+- [x] 四个任务均有明确问题、映射设计、图形和解读。
+- [x] 任务1—3各完成一张证据图，任务4完成同数据的两图比较。
+- [x] 巩固提升三个层级均提供代码和参考说明。
+- [x] 任务1使用总死亡人数；任务2—4使用相应死亡率，单位与来源明确。
+- [x] 数值、月份和变化量可复核，结论没有超出数据支持范围。
+- [x] 项目结论包含数值证据、建议、图形选择和局限。
+- [x] 从数据准备代码开始按顺序运行，使用 `load("chapter02.RData")` 读取数据，并渲染为HTML。

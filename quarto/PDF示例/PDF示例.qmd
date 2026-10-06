@@ -1,0 +1,15 @@
+---
+title: "PDF示例"
+format: 
+  typst:
+    number-sections: true
+knitr:
+  opts_chunk:
+    dev: ragg_png
+    dpi: 150
+---
+
+# 标题1
+
+## 标题2
+

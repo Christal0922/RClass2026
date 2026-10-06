@@ -1,0 +1,197 @@
+---
+title: "代码"
+lang: zh-CN
+format:
+  revealjs:
+    theme: night
+    width: 1280
+    height: 720
+    margin: 0.055
+    center: false
+    slide-level: 2
+
+    code-block-bg: "#f4f6f8"
+    code-block-border-left: "#55b6e7"
+    highlight-style: github
+    code-line-numbers: true
+    code-overflow: wrap
+
+    slide-number: c/t
+    progress: true
+    controls: true
+    transition: fade
+    background-transition: fade
+
+    toc: true
+    toc-depth: 1
+    fig-align: center
+    chalkboard: true
+    preview-links: auto
+
+fig-width: 9.6
+fig-height: 3.9
+
+execute:
+  warning: false
+  message: false
+  echo: true
+---
+
+
+## 代码1
+
+::: columns
+
+::: {.column width="50%"}
+
+
+```r
+ggplot(before,  
+  aes(x = 月份, y = 死亡率,
+      fill = 死亡原因)) +
+  geom_col()
+```
+
+:::
+
+::: {.column width="50%"}
+```r
+ggplot(before,
+  aes(x = 月份, y = 死亡率)) +
+  geom_col(fill = "steelblue")
+```
+
+:::
+
+:::
+
+## 代码2
+
+::: columns
+
+::: {.column width="50%"}
+
+
+```r
+ggplot(before,  
+  aes(x = 月份, y = 死亡率,
+      fill = 死亡原因)) +
+  geom_col()
+```
+
+:::
+
+::: {.column width="50%"}
+```r
+ggplot(before,
+  aes(x = 月份, y = 死亡率)) +
+  geom_col(fill = "steelblue")
+```
+
+:::
+
+:::
+
+# 1
+
+## 代码2
+
+::: columns
+
+::: {.column width="50%"}
+
+
+```r
+ggplot(before,  
+  aes(x = 月份, y = 死亡率,
+      fill = 死亡原因)) +
+  geom_col()
+```
+
+:::
+
+::: {.column width="50%"}
+```r
+ggplot(before,
+  aes(x = 月份, y = 死亡率)) +
+  geom_col(fill = "steelblue")
+```
+
+:::
+
+:::
+
+## 代码2
+
+::: columns
+
+::: {.column width="50%"}
+
+
+```r
+ggplot(before,  
+  aes(x = 月份, y = 死亡率,
+      fill = 死亡原因)) +
+  geom_col()
+```
+
+:::
+
+::: {.column width="50%"}
+```r
+ggplot(before,
+  aes(x = 月份, y = 死亡率)) +
+  geom_col(fill = "steelblue")
+```
+
+:::
+
+:::
+
+## 代码2
+
+::: columns
+
+::: {.column width="50%"}
+
+
+```r
+ggplot(before,  
+  aes(x = 月份, y = 死亡率,
+      fill = 死亡原因)) +
+  geom_col()
+```
+
+:::
+
+::: {.column width="50%"}
+```r
+ggplot(before,
+  aes(x = 月份, y = 死亡率)) +
+  geom_col(fill = "steelblue")
+```
+
+:::
+
+:::
+
+# 0
+
+## 代码2
+
+
+```r
+ggplot(cause_summary,
+       aes(x = 死亡原因, y = 累计死亡人数,
+           fill = 死亡原因)) +
+  geom_col()   # 数据里已有 y 值，直接用 col
+```
+
+## 代码2
+
+
+```r
+ggplot(before,
+  aes(x = 月份, y = 死亡率)) +
+  geom_col(fill = "steelblue")
+```

@@ -1,0 +1,1388 @@
+---
+title: "02 ggplot2绘图基础"
+subtitle: "数据如何改变战争？基于南丁格尔玫瑰图的可视化项目"
+lang: zh-CN
+format:
+  revealjs:
+    theme: night
+    width: 1280
+    height: 720
+    margin: 0.055
+    center: false
+    slide-level: 2
+
+    code-block-bg: "#f4f6f8"
+    code-block-border-left: "#55b6e7"
+    highlight-style: github
+    code-line-numbers: true
+    code-overflow: wrap
+
+    slide-number: c/t
+    progress: true
+    controls: true
+    transition: fade
+    background-transition: fade
+
+    toc: true
+    toc-depth: 2
+    fig-align: center
+    chalkboard: true
+    preview-links: auto
+execute:
+  warning: false
+  message: false
+  echo: true
+---
+
+<style>
+:root {
+  --course-blue: #78c8f5;
+  --course-blue-dark: #1f5f85;
+  --course-gold: #ffd166;
+  --course-green: #67d6b4;
+  --course-text: #f3f6f9;
+  --course-muted: #b8c3ce;
+  --course-line: #34495e;
+  --course-bg: #101820;
+}
+
+.reveal {
+  font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  color: var(--course-text);
+  font-size: 29pt;
+}
+
+.reveal .slides section {
+  text-align: left;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.reveal .slides section[data-nav] {
+  padding-top: 48px !important;
+}
+
+.reveal .slides section[data-task] {
+  padding-top: 48px !important;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+  color: var(--course-text);
+  letter-spacing: 0.01em;
+}
+
+.reveal h1 {
+  color: var(--course-blue);
+  font-size: 32pt;
+  line-height: 1.12;
+  margin: 0.12em 0 0.35em;
+}
+
+.reveal h2 {
+  font-size: 32pt;
+  line-height: 1.12;
+  margin: 0 0 0.38em;
+  padding-bottom: 0.18em;
+  border-bottom: 2px solid rgba(120, 200, 245, 0.62);
+}
+
+.reveal h3 {
+  font-size: 30pt;
+  line-height: 1.14;
+  color: var(--course-blue);
+  margin: 0.3em 0 0.16em;
+}
+
+#title-slide h1 {
+  font-size: 48pt;
+  line-height: 1.12;
+  margin-bottom: 0.32em;
+}
+
+#title-slide .subtitle {
+  font-size: 30pt;
+}
+
+.reveal p,
+.reveal li {
+  font-size: 29pt;
+  line-height: 1.24;
+}
+
+.reveal p {
+  margin: 0.26em 0;
+}
+
+.reveal ul,
+.reveal ol {
+  margin-top: 0.24em;
+  margin-bottom: 0.24em;
+}
+
+.reveal strong {
+  color: var(--course-gold);
+}
+
+.reveal code:not(pre code) {
+  color: #9bdcff;
+  background: rgba(120, 200, 245, 0.12);
+  padding: 0.04em 0.2em;
+  border-radius: 0.16em;
+}
+
+.reveal pre {
+  margin: 0.26em 0;
+  box-shadow: none;
+}
+
+.reveal pre code {
+  color: #24292f;
+  font-size: 18pt;
+  line-height: 1.22;
+  max-height: 390px;
+  padding: 0.55em;
+}
+
+.reveal table {
+  width: 100%;
+  font-size: 28pt;
+  line-height: 1.16;
+  margin: 0.28em auto;
+  border-collapse: collapse;
+}
+
+.reveal table th {
+  color: var(--course-blue);
+  font-weight: 700;
+  border-bottom: 2px solid var(--course-blue-dark);
+}
+
+.reveal table td,
+.reveal table th {
+  padding: 0.14em 0.32em;
+  border-color: rgba(184, 195, 206, 0.36);
+  vertical-align: middle;
+}
+
+.reveal blockquote {
+  font-size: 28pt;
+  line-height: 1.24;
+  width: auto;
+  margin: 0.36em 0;
+  padding: 0.34em 0.62em;
+  border-left: 6px solid var(--course-blue);
+  background: rgba(120, 200, 245, 0.08);
+  box-shadow: none;
+  font-style: normal;
+}
+
+.course-nav {
+  display: flex;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 20;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.12em;
+  margin: 0;
+  padding: 0.08em 0 0.1em;
+  border-bottom: 1px solid rgba(120, 200, 245, 0.35);
+  font-size: 28pt;
+  line-height: 1.05;
+  letter-spacing: 0;
+  background: rgba(16, 24, 32, 0.96);
+}
+
+.course-nav span {
+  color: var(--course-muted);
+  padding: 0.1em 0.3em;
+  border-radius: 1em;
+  white-space: nowrap;
+}
+
+.course-nav span.active {
+  color: #07131d;
+  background: var(--course-blue);
+  font-weight: 700;
+}
+
+.task-route {
+  display: flex;
+  position: relative;
+  top: auto;
+  right: auto;
+  left: auto;
+  z-index: 1;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 0.2em;
+  margin: 0 0 0.42em;
+  padding: 0.06em 0 0.12em;
+  font-size: 24pt;
+  line-height: 1.12;
+  color: var(--course-muted);
+  background: transparent;
+}
+
+.task-route .task-name {
+  color: var(--course-gold);
+  font-weight: 700;
+  margin-right: 0.28em;
+}
+
+.task-route .route-item {
+  padding: 0.08em 0.34em 0.12em;
+  border-bottom: 3px solid transparent;
+  white-space: nowrap;
+}
+
+.task-route .route-item.active {
+  color: var(--course-text);
+  border-color: var(--course-gold);
+  font-weight: 700;
+}
+
+.task-question {
+  border-left: 7px solid var(--course-gold);
+  padding: 0.32em 0.62em;
+  margin: 0.34em 0 0.4em;
+  background: rgba(255, 209, 102, 0.08);
+  font-size: 29pt;
+  line-height: 1.24;
+}
+
+.evidence-box {
+  border-left: 7px solid var(--course-green);
+  padding: 0.32em 0.62em;
+  margin: 0.34em 0 0.4em;
+  background: rgba(103, 214, 180, 0.08);
+  font-size: 29pt;
+  line-height: 1.24;
+}
+
+.answer-space {
+  color: var(--course-muted);
+  border-bottom: 1px dashed rgba(184, 195, 206, 0.75);
+  padding-bottom: 0.12em;
+  font-size: 29pt;
+}
+
+.flow-line {
+  text-align: center;
+  color: var(--course-blue);
+  font-weight: 700;
+  font-size: 29pt;
+  word-spacing: 0.28em;
+  margin: 0.46em 0 0.2em;
+}
+
+.small {
+  font-size: 28pt;
+}
+
+.tiny {
+  font-size: 28pt;
+}
+
+.muted {
+  color: var(--course-muted);
+}
+
+.center-text {
+  text-align: center;
+}
+
+.reveal .cell-output-display {
+  margin-top: 0.18em;
+  margin-bottom: 0.18em;
+}
+
+.reveal figure {
+  margin: 0.16em auto;
+}
+
+.reveal .slide-number {
+  font-size: 28pt;
+  color: var(--course-muted);
+  background: transparent;
+}
+</style>
+
+<script>
+window.addEventListener("load", function () {
+  const mainItems = ["项目背景", "新知探究", "项目任务", "项目总结"];
+  const taskItems = ["分析目的", "数据映射", "图形建构", "图表解读"];
+
+  document.querySelectorAll(".reveal .slides section[data-nav]").forEach(function (section) {
+    if (section.querySelector(":scope > .course-nav")) return;
+
+    const activeMain = section.dataset.nav || "";
+    const mainNav = document.createElement("div");
+    mainNav.className = "course-nav";
+
+    mainItems.forEach(function (item) {
+      const node = document.createElement("span");
+      node.textContent = item;
+      if (item === activeMain) node.classList.add("active");
+      mainNav.appendChild(node);
+    });
+
+    section.insertBefore(mainNav, section.firstChild);
+
+    if (section.dataset.task) {
+      const route = document.createElement("div");
+      route.className = "task-route";
+
+      const taskName = document.createElement("span");
+      taskName.className = "task-name";
+      taskName.textContent = section.dataset.task;
+      route.appendChild(taskName);
+
+      taskItems.forEach(function (item) {
+        const node = document.createElement("span");
+        node.className = "route-item";
+        node.textContent = item;
+        if (item === section.dataset.step) node.classList.add("active");
+        route.appendChild(node);
+      });
+
+      mainNav.insertAdjacentElement("afterend", route);
+    }
+  });
+});
+</script>
+
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(HistData)
+
+# 统一配色
+cause_colors <- c(
+  "可预防疾病" = "#56B4E9",
+  "战伤" = "#E69F00",
+  "其他原因" = "#9AA0A6"
+)
+
+# 读取数据并沿用课程项目中的中文变量名
+nightingale <- HistData::Nightingale
+
+nightingale_long <- nightingale %>%
+  mutate(
+    阶段 = factor(
+      rep(c("第1阶段", "第2阶段"), each = 12),
+      levels = c("第1阶段", "第2阶段")
+    )
+  ) %>%
+  rename(
+    Disease.count = Disease,
+    Wounds.count  = Wounds,
+    Other.count   = Other
+  ) %>%
+  pivot_longer(
+    cols = c(
+      Disease.count, Wounds.count, Other.count,
+      Disease.rate, Wounds.rate, Other.rate
+    ),
+    names_to = c("死亡原因", ".value"),
+    names_sep = "\\."
+  ) %>%
+  rename(
+    日期       = Date,
+    月份       = Month,
+    年份       = Year,
+    军队人数   = Army,
+    死亡人数   = count,
+    年化死亡率 = rate
+  ) %>%
+  mutate(
+    死亡原因 = recode(
+      死亡原因,
+      "Disease" = "可预防疾病",
+      "Wounds"  = "战伤",
+      "Other"   = "其他原因"
+    ),
+    死亡原因 = factor(
+      死亡原因,
+      levels = c("可预防疾病", "战伤", "其他原因")
+    ),
+    月份中文 = recode(
+      as.character(月份),
+      "Apr" = "4月", "May" = "5月", "Jun" = "6月",
+      "Jul" = "7月", "Aug" = "8月", "Sep" = "9月",
+      "Oct" = "10月", "Nov" = "11月", "Dec" = "12月",
+      "Jan" = "1月", "Feb" = "2月", "Mar" = "3月"
+    ),
+    月份中文 = factor(
+      月份中文,
+      levels = c("4月", "5月", "6月", "7月", "8月", "9月",
+                 "10月", "11月", "12月", "1月", "2月", "3月")
+    ),
+    月死亡率 = 死亡人数 / 军队人数 * 1000,
+    时间标签 = format(日期, "%Y-%m"),
+    时间标签 = factor(时间标签, levels = unique(时间标签))
+  ) %>%
+  select(
+    日期, 时间标签, 月份, 月份中文, 年份, 军队人数, 阶段,
+    死亡原因, 死亡人数, 月死亡率, 年化死亡率
+  )
+
+# 第1阶段为卫生改革前，第2阶段为卫生改革后
+nightingale_before <- nightingale_long %>%
+  filter(阶段 == "第1阶段")
+
+nightingale_after <- nightingale_long %>%
+  filter(阶段 == "第2阶段")
+
+# 任务1使用的汇总数据
+n_summary_before <- nightingale_before %>%
+  group_by(死亡原因) %>%
+  summarise(
+    总死亡人数 = sum(死亡人数),
+    平均月死亡率 = mean(月死亡率),
+    平均年化死亡率 = mean(年化死亡率),
+    .groups = "drop"
+  )
+
+# 任务3的量化比较数据
+n_summary_stage <- nightingale_long %>%
+  group_by(阶段, 死亡原因) %>%
+  summarise(
+    总死亡人数 = sum(死亡人数),
+    平均月死亡率 = mean(月死亡率),
+    平均年化死亡率 = mean(年化死亡率),
+    .groups = "drop"
+  )
+
+# 适配深色课堂演示的图形主题：图内可见文字不小于28pt
+theme_course <- theme_minimal(base_size = 28) +
+  theme(
+    text = element_text(color = "#F3F6F9", size = 28),
+    axis.text = element_text(color = "#DCE4EA", size = 28),
+    axis.title = element_text(color = "#F3F6F9", size = 28, face = "bold"),
+    plot.title = element_text(
+      color = "#F3F6F9", face = "bold", size = 32,
+      lineheight = 1.05, margin = margin(b = 4)
+    ),
+    plot.subtitle = element_text(
+      color = "#BDC8D2", size = 28,
+      lineheight = 1.05, margin = margin(b = 4)
+    ),
+    plot.caption = element_text(color = "#BDC8D2", size = 28),
+    plot.title.position = "plot",
+    plot.margin = margin(t = 4, r = 8, b = 4, l = 6),
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.text = element_text(color = "#F3F6F9", size = 28),
+    legend.title = element_text(color = "#F3F6F9", size = 28, face = "bold"),
+    legend.margin = margin(0, 0, 0, 0),
+    legend.spacing.x = grid::unit(0.08, "cm"),
+    legend.background = element_rect(fill = "#101820", color = NA),
+    legend.key = element_rect(fill = "#101820", color = NA),
+    panel.grid.major = element_line(color = "#314353", linewidth = 0.35),
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect(fill = "#101820", color = NA),
+    plot.background = element_rect(fill = "#101820", color = NA),
+    strip.background = element_rect(fill = "#213546", color = NA),
+    strip.text = element_text(color = "#F3F6F9", face = "bold", size = 28)
+  )
+
+# 任务1：死亡原因比较图
+p_task1 <- ggplot(
+  n_summary_before,
+  aes(x = 死亡原因, y = 平均月死亡率, fill = 死亡原因)
+) +
+  geom_col(width = 0.66) +
+  geom_text(
+    aes(label = round(平均月死亡率, 1)),
+    vjust = -0.32, color = "#F3F6F9", size = 10
+  ) +
+  scale_fill_manual(values = cause_colors) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.16))) +
+  labs(
+    x = NULL,
+    y = "平均月死亡率\n（每千人）"
+  ) +
+  guides(fill = "none") +
+  theme_course
+
+# 任务2：改革前各月死亡水平构成图
+p_task2 <- ggplot(
+  nightingale_before,
+  aes(x = 月份中文, y = 月死亡率, fill = 死亡原因)
+) +
+  geom_col(width = 0.82) +
+  scale_fill_manual(values = cause_colors) +
+  labs(
+    x = NULL,
+    y = "月死亡率\n（每千人）",
+    fill = NULL
+  ) +
+  guides(fill = guide_legend(nrow = 1, byrow = TRUE)) +
+  theme_course +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 28))
+
+# 任务3：改革前后分面对比图
+p_task3 <- ggplot(
+  nightingale_long,
+  aes(x = 月份中文, y = 月死亡率, fill = 死亡原因)
+) +
+  geom_col(width = 0.82) +
+  facet_wrap(
+    ~阶段,
+    ncol = 1,
+    labeller = labeller(
+      阶段 = c(
+        "第1阶段" = "卫生改革前（1854.4—1855.3）",
+        "第2阶段" = "卫生改革后（1855.4—1856.3）"
+      )
+    )
+  ) +
+  scale_fill_manual(values = cause_colors) +
+  labs(
+    x = NULL,
+    y = "月死亡率\n（每千人）",
+    fill = NULL
+  ) +
+  guides(fill = guide_legend(nrow = 1, byrow = TRUE)) +
+  theme_course +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 28))
+
+# 任务4：课堂复现版南丁格尔玫瑰图
+p_task4 <- ggplot(
+  nightingale_long,
+  aes(x = 月份中文, y = 月死亡率, fill = 死亡原因)
+) +
+  geom_col(
+    position = "identity", width = 1,
+    color = "#101820", linewidth = 0.22
+  ) +
+  facet_wrap(
+    ~阶段,
+    ncol = 2,
+    labeller = labeller(
+      阶段 = c(
+        "第1阶段" = "改革前\n1854.4—1855.3",
+        "第2阶段" = "改革后\n1855.4—1856.3"
+      )
+    )
+  ) +
+  coord_polar() +
+  scale_y_sqrt(expand = expansion(mult = c(0, 0.035))) +
+  scale_fill_manual(values = cause_colors) +
+  labs(
+    x = NULL,
+    y = NULL,
+    fill = NULL
+  ) +
+  guides(fill = guide_legend(nrow = 1, byrow = TRUE)) +
+  theme_course +
+  theme(
+    axis.text.y = element_blank(),
+    axis.text.x = element_text(size = 28),
+    panel.grid.major.y = element_blank()
+  )
+```
+
+# 项目背景 {data-nav="项目背景"}
+
+## 战场之外的死亡 {data-nav="项目背景"}
+
+::: columns
+
+::: {.column width="55%"}
+
+1854年，克里米亚战争爆发。
+
+公众普遍认为，前线士兵主要死于战斗和伤口。
+
+南丁格尔抵达战地医院后，却看到另一种现实：病房拥挤、污水堆积，霍乱、痢疾和斑疹伤寒不断蔓延。
+
+::: {.task-question}
+士兵主要死于战伤，还是死于本可预防的疾病？
+:::
+
+:::
+
+::: {.column width="45%"}
+
+### 先凭直觉投票
+
+- A　战伤
+- B　可预防疾病
+- C　其他原因
+- D　需要数据，暂时无法判断
+
+<br>
+
+**先保留判断，随后用数据检验。**
+
+:::
+
+:::
+
+## 项目角色与驱动性问题 {data-nav="项目背景"}
+
+你是一名**军队卫生改革数据顾问**。
+
+政府需要决定：有限资源应优先用于战伤救治，还是改善医院和营地的卫生条件？
+
+::: {.task-question}
+驱动性问题：数据能否为卫生改革的资源投入提供可信证据？
+:::
+
+项目成果：
+
+- 4幅服务于不同问题的证据图
+- 一段“结论、证据、建议、局限”式图表解读
+- 一项面向公共卫生决策的行动建议
+
+## 数据与研究对象 {data-nav="项目背景"}
+
+数据记录1854年4月至1856年3月共24个月的英军情况。
+
+| 变量 | 含义 | 本项目中的作用 |
+|---|---|---|
+| 日期、月份、年份 | 观测时间 | 判断月份变化 |
+| 军队人数 | 当月士兵总人数 | 计算可比较的死亡率 |
+| 阶段 | 第1阶段、 第2阶段 | 比较卫生改革前后 |
+| 死亡原因 | 可预防疾病、战伤、其他原因 | 比较死亡构成 |
+| 死亡人数 | 当月死亡人数 | 反映实际死亡规模 |
+| 月死亡率 | 当月每1000名士兵中的死亡人数 | 跨月份比较 |
+
+**数据对象：**`nightingale_long`、`nightingale_before`、`nightingale_after`、`n_summary_before`
+
+## 四个任务构成完整问题链 {data-nav="项目背景"}
+
+| 项目阶段 | 当前问题 | 阶段成果 |
+|---|---|---|
+| 第一课时·任务1 | 哪一种死亡原因造成的死亡水平最高？ | 死亡原因比较图 |
+| 第一课时·任务2 | 高死亡水平是否集中在个别月份？ | 月度构成图 |
+| 第二课时·任务3 | 卫生改革前后发生了什么变化？ | 分面对比图 |
+| 第二课时·任务4 | 玫瑰图适合分析还是传播？ | 玫瑰图评价 |
+| 项目结论 | 证据支持怎样的行动建议？ | 决策建议与局限 |
+
+<div class="flow-line">问题牵引　数据探究　图形建构　证据解读　决策反思</div>
+
+## 两课时项目安排 {data-nav="项目背景"}
+
+| 课时 | 核心任务 | 新知支撑 | 课堂产出 |
+|---|---|---|---|
+| 第一课时 45分钟 | 任务1、任务2 | 视觉通道、图形映射、ggplot2基本语法 | 比较图、月度构成图 |
+| 第二课时 45分钟 | 任务3、任务4 | 分面、极坐标、图形选择 | 分面对比图、玫瑰图评价 |
+
+每个任务遵循同一实践路线：
+
+<div class="flow-line">分析目的　数据映射　图形建构　图表解读</div>
+
+课堂讨论、代码解释和小组互评嵌入“图表解读”环节。
+
+分层要求：**★基础任务必做　★★进阶任务选做　★★★挑战任务合作完成**
+
+# 新知探究 {data-nav="新知探究"}
+
+## 指标选择：死亡人数还是死亡率 {data-nav="新知探究"}
+
+::: columns
+
+::: {.column width="47%"}
+
+### 死亡人数
+
+- 容易理解
+- 反映实际死亡规模
+- 容易受到军队人数变化影响
+
+:::
+
+::: {.column width="53%"}
+
+### 月死亡率
+
+$$\text{月死亡率}=\frac{\text{当月死亡人数}}{\text{当月军队人数}}\times1000$$
+
+含义：这个月每1000名士兵中约有多少人死亡。
+
+适合比较军队人数不同的月份。
+
+:::
+
+:::
+
+::: {.evidence-box}
+本项目优先使用月死亡率。它控制了不同月份军队人数的差异，单位也比年化死亡率更容易理解。
+:::
+
+## 视觉通道映射 {data-nav="新知探究"}
+
+数据变量需要通过视觉通道进入图形。
+
+| 视觉通道 | 人眼感知 | 适合的数据 | 本项目示例 |
+|---|---|---|---|
+| 位置 | 高低、左右 | 数值、类别、时间 | 月份、死亡率 |
+| 长度 | 柱子的高低 | 数值 | 月死亡率 |
+| 颜色 | 不同色相 | 分类 | 死亡原因 |
+| 大小/面积 | 图形大小 | 数值 | 玫瑰图中的死亡水平 |
+| 分面 | 多个结构相同的小图 | 分类 | 改革前后 |
+
+**原则：**精确比较数值时，优先使用位置和长度；颜色主要用于区分类别。
+
+## 从分析问题到图形映射 {data-nav="新知探究"}
+
+| 分析问题 | 横轴 x | 纵轴 y | 颜色 fill | 分面 facet |
+|---|---|---|---|---|
+| 哪类死因最高？ | 死亡原因 | 平均月死亡率 | 死亡原因 | 无 |
+| 哪些月份较高？ | 月份 | 月死亡率 | 死亡原因 | 无 |
+| 改革前后怎样变化？ | 月份 | 月死亡率 | 死亡原因 | 阶段 |
+| 玫瑰图表达什么？ | 月份 | 月死亡率 | 死亡原因 | 阶段 |
+
+::: {.task-question}
+先完成映射表，再写代码。代码只是把分析决策交给R执行。
+:::
+
+## ggplot2图形语法：完整框架 {data-nav="新知探究"}
+
+ggplot2用“**数据 + 映射 + 图层**”逐步建构图形。
+
+```{r}
+#| eval: false
+ggplot(data = 数据框,
+       aes(x = 横轴变量,
+           y = 纵轴变量,
+           fill = 分类变量)) +
+  geom_几何对象() +       # 柱、点、线等
+  stat_统计变换() +       # 计数、汇总等（可选）
+  scale_标度() +          # 颜色、坐标刻度等
+  facet_分面() +          # 分组比较
+  coord_坐标系() +        # 直角或极坐标
+  labs(...) +             # 标题、轴名、图例名
+  theme_主题()             # 非数据元素
+```
+
+**核心骨架：**`ggplot(data, aes(...)) + geom_*()`  
+**本项目扩展：**`scale_*()`、`facet_*()`、`coord_*()`、`labs()`、`theme_*()`
+
+## ggplot2图层的职责 {data-nav="新知探究"}
+
+| 图层 | 回答的问题 | 本项目函数 |
+|---|---|---|
+| data | 使用哪份数据？ | `ggplot(data = ...)` |
+| mapping | 变量映射到哪里？ | `aes(x, y, fill)` |
+| geom | 用什么图形表达？ | `geom_col()` |
+| stat | 数据是否需要统计变换？ | `stat = "identity"` |
+| scale | 颜色和刻度怎样显示？ | `scale_fill_manual()` |
+| facet | 怎样分组比较？ | `facet_wrap()` |
+| coord | 使用什么坐标系统？ | `coord_polar()` |
+| theme | 非数据元素怎样显示？ | `theme_minimal()` |
+
+## 映射与属性设定 {data-nav="新知探究"}
+
+::: columns
+
+::: {.column width="50%"}
+
+### 映射写在`aes()`内
+
+```{r}
+#| eval: false
+# aes()内：颜色由“死亡原因”变量控制
+ggplot(data,
+       aes(x = 月份中文,
+           y = 月死亡率,
+           fill = 死亡原因)) +
+  geom_col()
+```
+
+颜色随死亡原因变化，并自动生成图例。
+
+:::
+
+::: {.column width="50%"}
+
+### 属性设定写在`aes()`外
+
+```{r}
+#| eval: false
+# aes()外：所有柱形使用同一种固定颜色
+ggplot(data,
+       aes(x = 月份中文,
+           y = 月死亡率)) +
+  geom_col(fill = "steelblue")
+```
+
+所有柱子使用同一种固定颜色。
+
+:::
+
+:::
+
+**快速判断：**`aes(fill = "steelblue")`属于映射还是属性设定？
+
+## `geom_col()`与`geom_bar()` {data-nav="新知探究"}
+
+| 函数 | 柱高来自哪里 | 适用问题 |
+|---|---|---|
+| `geom_bar()` | 自动统计每类有多少行 | 每个类别出现多少次？ |
+| `geom_col()` | 直接使用已有的y变量 | 每类已有数值是多少？ |
+
+本项目已经拥有`月死亡率`和`平均月死亡率`，因此使用：
+
+```{r}
+#| eval: false
+# 汇总数据已有y值，因此使用geom_col()
+ggplot(n_summary_before,
+       aes(x = 死亡原因,
+           y = 平均月死亡率,
+           fill = 死亡原因)) +
+  geom_col()
+```
+
+# 项目任务 {data-nav="项目任务"}
+
+## 第一课时：任务1与任务2 {data-nav="项目任务"}
+
+| 任务 | 当前问题 | 证据图 |
+|---|---|---|
+| 任务1 | 哪一种死亡原因造成的死亡水平最高？ | 死亡原因比较图 |
+| 任务2 | 高死亡水平是否集中在个别月份？ | 月度构成图 |
+
+第一课时重点：完成“分类比较”和“月份变化”两个层次的证据构建。
+
+## 任务1：哪一种死亡原因造成的死亡水平最高 {data-nav="项目任务" data-task="任务1" data-step="分析目的"}
+
+::: {.task-question}
+分析目的：比较改革前各死因的平均月死亡率，找出最高者。
+:::
+
+| 决策问题 | 本任务选择 |
+|---|---|
+| 比较对象 | 可预防疾病、战伤、其他原因 |
+| 比较指标 | 平均月死亡率（每千人） |
+| 数据框 | `n_summary_before` |
+| 图形受众 | 没有统计基础的政府官员 |
+| 预期成果 | 死亡原因比较图 |
+
+**先预测：**我认为最高的死亡原因是<span class="answer-space">　　　　　　　　　</span>。
+
+## 任务1：变量如何进入图形 {data-nav="项目任务" data-task="任务1" data-step="数据映射"}
+
+| 数据变量 | 变量类型 | 视觉通道 | ggplot2写法 |
+|---|---|---|---|
+| 死亡原因 | 分类变量 | 横轴位置 | `x = 死亡原因` |
+| 平均月死亡率 | 数值变量 | 柱形长度 | `y = 平均月死亡率` |
+| 死亡原因 | 分类变量 | 填充颜色 | `fill = 死亡原因` |
+
+选择`geom_col()`的理由：数据中已经有平均月死亡率，柱形高度直接表达该数值。
+
+```{r}
+#| eval: false
+# 将变量映射到位置、长度和颜色
+aes(
+  x = 死亡原因,
+  y = 平均月死亡率,
+  fill = 死亡原因
+)
+```
+
+## 任务1：死亡原因比较图 {data-nav="项目任务" data-task="任务1" data-step="图形建构"}
+
+::: columns
+
+::: {.column width="48%"}
+
+```{r}
+#| eval: false
+# 1. 指定数据，并建立变量与视觉通道的映射
+ggplot(n_summary_before,
+       aes(x = 死亡原因,
+           y = 平均月死亡率,
+           fill = 死亡原因)) +
+  geom_col() +  # 2. 已有平均值，直接绘制
+  labs(         # 3. 补充坐标轴标签
+    x = NULL,
+    y = "平均月死亡率（每千人）"
+  )
+```
+
+:::
+
+::: {.column width="52%"}
+
+```{r}
+#| echo: false
+#| fig-width: 6.4
+#| fig-height: 4.25
+#| out-width: 100%
+p_task1
+```
+
+:::
+
+:::
+
+## 任务1：用证据回答问题 {data-nav="项目任务" data-task="任务1" data-step="图表解读"}
+
+::: {.evidence-box}
+**结论：**卫生改革前，________________造成的平均死亡水平最高。  
+**证据：**该原因的平均月死亡率为________，明显高于________和________。  
+**谨慎表达：**这张图能说明不同死因的平均水平，但不能显示死亡集中在哪些月份。
+:::
+
+图表解读要回答三个问题：
+
+1. 谁最高？
+2. 高多少？
+3. 这张图还不能说明什么？
+
+**阶段成果：**死亡原因比较图
+
+## 任务1：代码解释关卡 {data-nav="项目任务" data-task="任务1" data-step="图表解读"}
+
+两人一组，轮流解释代码：
+
+```{r}
+#| eval: false
+# 解释关卡：依次说明数据、映射和几何对象
+ggplot(n_summary_before,
+       aes(x = 死亡原因,
+           y = 平均月死亡率,
+           fill = 死亡原因)) +
+  geom_col()
+```
+
+- `data`指定了什么？
+- `aes()`建立了哪些映射？
+- `geom_col()`为什么适合本任务？
+- 如果把`fill = 死亡原因`移到`aes()`外，会发生什么？
+
+**通过标准：**不看讲义，用自己的语言说明每一行代码。
+
+## 任务2：高死亡水平是否集中在个别月份 {data-nav="项目任务" data-task="任务2" data-step="分析目的"}
+
+::: {.task-question}
+分析目的：观察改革前各月死亡水平，判断高值是否集中。
+:::
+
+任务1把12个月汇总为三个柱子，隐藏了时间差异。
+
+| 新问题 | 需要增加的分析维度 |
+|---|---|
+| 哪些月份死亡水平较高？ | 月份 |
+| 高死亡主要来自什么原因？ | 死亡原因 |
+| 每月总体死亡水平是多少？ | 同月各死因月死亡率之和 |
+
+**预期成果：**月度构成图
+
+## 任务2：月份、死亡率与死因 {data-nav="项目任务" data-task="任务2" data-step="数据映射"}
+
+| 数据变量 | 视觉通道 | ggplot2写法 |
+|---|---|---|
+| 月份中文 | 横轴位置 | `x = 月份中文` |
+| 月死亡率 | 柱形高度 | `y = 月死亡率` |
+| 死亡原因 | 填充颜色 | `fill = 死亡原因` |
+
+使用堆叠柱形图：
+
+- 柱形总高度表示当月总体死亡水平
+- 每种颜色表示一种死亡原因
+- 同月各死因使用相同的军队人数作分母，可以相加
+
+## 任务2：月度构成图 {data-nav="项目任务" data-task="任务2" data-step="图形建构"}
+
+::: columns
+
+::: {.column width="48%"}
+
+```{r}
+#| eval: false
+# 1. 用月份表示时间，用颜色区分死亡原因
+ggplot(nightingale_before,
+       aes(x = 月份中文,
+           y = 月死亡率,
+           fill = 死亡原因)) +
+  geom_col() +  # 2. 默认堆叠，柱高表示总水平
+  labs(         # 3. 标明指标单位和图例含义
+    x = NULL,
+    y = "月死亡率（每千人）",
+    fill = "死亡原因"
+  )
+```
+
+:::
+
+::: {.column width="52%"}
+
+```{r}
+#| echo: false
+#| fig-width: 6.5
+#| fig-height: 4.2
+#| out-width: 100%
+p_task2
+```
+
+:::
+
+:::
+
+## 任务2：月份模式与死亡构成 {data-nav="项目任务" data-task="任务2" data-step="图表解读"}
+
+::: {.evidence-box}
+**月份模式：**高死亡水平主要集中在________________。  
+**构成证据：**这些月份的柱形主要由________________颜色构成。  
+**解释假设：**可能与________________有关，但现有数据尚不能验证该解释。
+:::
+
+读堆叠柱形图时按两个层次观察：
+
+1. 先看柱形总高度，判断每月总体死亡水平
+2. 再看颜色构成，判断主要死亡原因
+
+**阶段成果：**月度构成图
+
+## 任务2：证据接力 {data-nav="项目任务" data-task="任务2" data-step="图表解读"}
+
+每组依次完成一句话，后一个小组必须引用前一组的证据：
+
+1. **描述：**最高的月份是________________。
+2. **比较：**它明显高于________________。
+3. **构成：**主要由________________死亡构成。
+4. **边界：**图中还不能说明________________。
+
+### 分层任务
+
+- ★ 找出最高月份和主要死因
+- ★★ 比较人数图与死亡率图是否得出相同结论
+- ★★★ 解释为什么不能把不同月份的死亡率直接相加
+
+## 第一课时小结 {data-nav="项目任务"}
+
+第一课时解决了两个问题：
+
+| 已解决的问题 | 得到的证据 |
+|---|---|
+| 哪一种死亡原因造成的死亡水平最高？ | 死亡原因比较图 |
+| 高死亡是否集中在个别月份？ | 月度构成图 |
+
+仍待解决：
+
+> 如果改善医院与营地卫生条件，死亡模式是否发生变化？
+
+带着假设进入第二课时：卫生改革后，可预防疾病死亡水平将____________。
+
+## 第二课时：任务3与任务4 {data-nav="项目任务"}
+
+| 任务 | 当前问题 | 证据图 |
+|---|---|---|
+| 任务3 | 卫生改革前后发生了什么变化？ | 分面对比图 |
+| 任务4 | 玫瑰图适合分析还是传播？ | 南丁格尔玫瑰图 |
+
+第二课时重点：比较阶段变化，并评价不同图形的表达价值。
+
+## 任务3：卫生改革前后发生了什么变化 {data-nav="项目任务" data-task="任务3" data-step="分析目的"}
+
+::: {.task-question}
+分析目的：比较改革前后，判断死亡水平与构成如何变化。
+:::
+
+| 决策问题 | 本任务选择 |
+|---|---|
+| 比较对象 | 第1阶段与第2阶段 |
+| 时间粒度 | 月 |
+| 核心指标 | 月死亡率（每千人） |
+| 比较方法 | 分面 |
+| 预期成果 | 改革前后分面对比图 |
+
+**假设：**第2阶段的可预防疾病死亡率将明显下降。
+
+## 任务3：增加阶段映射 {data-nav="项目任务" data-task="任务3" data-step="数据映射"}
+
+任务2的三个映射保持不变，再增加阶段分面：
+
+| 变量 | 视觉表达 | ggplot2写法 |
+|---|---|---|
+| 月份中文 | 横轴位置 | `x = 月份中文` |
+| 月死亡率 | 柱形高度 | `y = 月死亡率` |
+| 死亡原因 | 填充颜色 | `fill = 死亡原因` |
+| 阶段 | 两个独立面板 | `facet_wrap(~阶段)` |
+
+分面让两个阶段共享相同的图形结构，读者可以直接比较柱高和颜色构成。
+
+## 任务3：分面对比图 {data-nav="项目任务" data-task="任务3" data-step="图形建构"}
+
+::: columns
+
+::: {.column width="45%"}
+
+```{r}
+#| eval: false
+# 1. 保持任务2中的月份、死亡率和死因映射
+ggplot(nightingale_long,
+       aes(x = 月份中文,
+           y = 月死亡率,
+           fill = 死亡原因)) +
+  geom_col() +
+  # 2. 按阶段分面，纵轴尺度保持一致
+  facet_wrap(~阶段, ncol = 1)
+```
+
+保持相同纵轴尺度，才能比较两个阶段的柱高。
+
+:::
+
+::: {.column width="55%"}
+
+```{r}
+#| echo: false
+#| fig-width: 6.9
+#| fig-height: 4.7
+#| out-width: 100%
+p_task3
+```
+
+:::
+
+:::
+
+## 任务3：变化发生在哪里 {data-nav="项目任务" data-task="任务3" data-step="图表解读"}
+
+::: {.evidence-box}
+**结论：**第2阶段的总体死亡水平明显________________。  
+**关键证据：**变化最明显的是________________死亡，表现为________________。  
+**稳定部分：**________________死亡的变化相对较小。  
+**结论边界：**改革前后变化支持卫生措施有效的判断，但不能单独证明全部变化都由改革造成。
+:::
+
+观察顺序：
+
+1. 比较两个面板的整体柱高
+2. 找到变化最大的颜色
+3. 检查其他死因是否同步下降
+
+## 任务3：寻找反证 {data-nav="项目任务" data-task="任务3" data-step="图表解读"}
+
+一半小组寻找“支持卫生改革有效”的证据，另一半小组寻找“仍需谨慎”的证据。
+
+| 支持证据 | 谨慎证据 |
+|---|---|
+| 哪类死亡下降最明显？ | 数据还缺少哪些影响因素？ |
+| 两个阶段的总体水平怎样变化？ | 季节、战况是否可能影响结果？ |
+| 改革前后时间是否相邻？ | 能否区分每项卫生措施的作用？ |
+
+**汇报要求：**每个观点必须指向图中的具体位置或数据变量。
+
+## 任务4：玫瑰图适合分析还是传播 {data-nav="项目任务" data-task="任务4" data-step="分析目的"}
+
+::: {.task-question}
+分析目的：比较柱形图与玫瑰图的分析和传播价值。
+:::
+
+同一份数据可以有不同表达方式：
+
+- 分面柱形图便于比较柱高
+- 玫瑰图更容易形成整体视觉印象
+
+**本任务不是寻找“最好看的图”，而是判断哪幅图更适合当前目的。**
+
+**先判断：**分析阶段优先使用____________；公众传播可以选择____________。
+
+## 任务4：坐标系改变，映射保持 {data-nav="项目任务" data-task="任务4" data-step="数据映射"}
+
+数据与映射不变，只增加坐标和标度图层：
+
+::: columns
+
+::: {.column width="57%"}
+
+```{r}
+#| eval: false
+# 1. 数据和映射与分面柱形图保持一致
+ggplot(nightingale_long,
+       aes(x = 月份中文,
+           y = 月死亡率,
+           fill = 死亡原因)) +
+  # 2. 各死因扇形从圆心开始绘制
+  geom_col(position = "identity", width = 1) +
+  facet_wrap(~阶段, ncol = 2) +
+  # 3. 转换为极坐标，并修正面积感知
+  coord_polar() +
+  scale_y_sqrt()
+```
+
+:::
+
+::: {.column width="43%"}
+
+### 关键变化
+
+- `coord_polar()`把直角坐标转换为极坐标
+- `scale_y_sqrt()`减弱半径平方造成的面积夸大
+- `position = "identity"`让各死因扇形从圆心开始叠放
+
+**口径提醒：**课堂复现版使用月死亡率；经典图使用标准化年化死亡率，二者不能混用。
+
+:::
+
+:::
+
+## 任务4：南丁格尔玫瑰图 {data-nav="项目任务" data-task="任务4" data-step="图形建构"}
+
+```{r}
+#| echo: false
+#| fig-width: 10.4
+#| fig-height: 4.85
+#| out-width: 82%
+p_task4
+```
+
+**观察重点：**整体面积、蓝色区域、改革前后对比。
+
+## 任务4：分析图与传播图 {data-nav="项目任务" data-task="任务4" data-step="图表解读"}
+
+| 判断标准 | 分面柱形图 | 玫瑰图 |
+|---|---:|---:|
+| 精确比较数值 | 强 | 较弱 |
+| 观察月份顺序 | 强 | 中等 |
+| 感知改革前后整体差异 | 强 | 强 |
+| 吸引非专业受众 | 中等 | 强 |
+| 解释难度 | 低 | 较高 |
+
+::: {.evidence-box}
+分析报告优先使用________________，因为________________。  
+公众传播可以使用________________，但必须说明________________。
+:::
+
+**阶段成果：**玫瑰图评价
+
+## 任务4：图形选择辩论 {data-nav="项目任务" data-task="任务4" data-step="图表解读"}
+
+::: columns
+
+::: {.column width="50%"}
+
+### A组：分面柱形图
+
+观点：政府分析报告应优先使用柱形图。
+
+请从精确比较、坐标尺度和误读风险提出证据。
+
+:::
+
+::: {.column width="50%"}
+
+### B组：玫瑰图
+
+观点：面向公众传播时可以优先使用玫瑰图。
+
+请从整体感知、注意力和历史语境提出证据。
+
+:::
+
+:::
+
+**共同底线：**标题、单位、图例和结论边界必须完整。
+
+# 项目总结 {data-nav="项目总结"}
+
+## 四个问题形成一条证据链 {data-nav="项目总结"}
+
+| 任务 | 解决的问题 | 证据图 | 形成的判断 |
+|---|---|---|---|
+| 任务1 | 哪类死因最高？ | 死亡原因比较图 | 确定主要死因 |
+| 任务2 | 高死亡集中在哪些月份？ | 月度构成图 | 识别时间模式 |
+| 任务3 | 改革前后怎样变化？ | 分面对比图 | 比较阶段差异 |
+| 任务4 | 玫瑰图适合什么目的？ | 玫瑰图 | 评价图形选择 |
+
+项目结论来自多幅图的相互支持，而不是来自一幅“好看的图”。
+
+## 决策建议与结论边界 {data-nav="项目总结"}
+
+::: {.evidence-box}
+**结论：**改革前，________________是士兵死亡的主要原因；改革后，________________。  
+**建议：**有限资源应优先用于________________，同时保留必要的战伤救治。  
+**证据：**任务1、任务2和任务3分别从________________、________________和________________提供支持。  
+**局限：**数据没有记录________________，因此不能把全部变化简单归因于卫生改革。
+:::
+
+科学表达包含两部分：说清证据支持什么，也说清证据不能证明什么。
+
+## 可视化问题求解流程 {data-nav="项目总结"}
+
+| 步骤 | 本项目中的决定 |
+|---:|---|
+| 1 | 从公共卫生决策中提出真实问题 |
+| 2 | 认识数据并选择可比较的指标 |
+| 3 | 建立变量与视觉通道的映射 |
+| 4 | 用ggplot2图层构建证据图 |
+| 5 | 从图中提取证据并检验预测 |
+| 6 | 比较不同图形的表达价值 |
+| 7 | 形成建议，同时说明局限 |
+
+::: {.task-question}
+ggplot2提供绘图规则，分析目的决定使用哪些规则。
+:::
+
+## AI协同学习边界 {data-nav="项目总结"}
+
+AI可以帮助：
+
+- 解释报错和函数参数
+- 比较两段代码的差异
+- 提出标签、配色和布局建议
+
+学生必须亲自完成：
+
+- 明确分析目的和选择指标
+- 设计变量与视觉通道的映射
+- 解释关键代码
+- 核验图形与结论是否一致
+
+**代码解释关卡：**无法解释`data`、`aes()`和`geom`时，需要返回映射表重新检查。
+
+## 项目评价 {data-nav="项目总结"}
+
+| 评价维度 | 权重 | 评价证据 |
+|---|---:|---|
+| 问题与分析目的 | 15% | 每个任务的分析设计 |
+| 指标与数据映射 | 20% | 变量—视觉通道映射表 |
+| 代码与图形表达 | 25% | 可运行代码、标题、单位和图例 |
+| 证据与结论 | 25% | 图表解读、建议与局限 |
+| 协作、反思与责任 | 15% | 互动记录、AI核验日志 |
+
+提交物：`.qmd`源文件、渲染后的HTML、项目指导书和AI使用记录。
+
+## 迁移任务：宁波舟山港 {data-nav="项目总结"}
+
+新的真实问题：
+
+> 宁波舟山港不同货物类型的吞吐量有何差异？近年来港口货运结构发生了怎样的变化？
+
+迁移要求：
+
+1. 先写分析目的和目标受众
+2. 选择总量、比例或增长率
+3. 完成变量—视觉通道映射表
+4. 使用柱形图或分面图构建证据
+5. 写出结论、建议和局限
+
+**提交顺序：分析设计先于代码和图形。**
+
+## 课程结束前的三个问题 {data-nav="项目总结"}
+
+1. 什么是ggplot2图形语法？
+
+2. 为什么图形选择必须从分析目的出发？
+
+3. 南丁格尔案例说明数据可视化怎样影响公共决策？
+
+请在出口卡上写下：
+
+- 今天最重要的一项收获
+- 仍然不确定的一个问题
+- 下一次项目中准备改进的一项做法
