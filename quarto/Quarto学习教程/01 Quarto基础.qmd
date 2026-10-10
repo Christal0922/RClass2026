@@ -10,10 +10,13 @@ format:
 execute:
   warning: false
   message: false
+  cache: true
 knitr:
   opts_chunk:
     dev: ragg_png
     dpi: 150
+date: today
+date-format: "YYYY年M月D日"
 ---
 
 # Markdown语法
@@ -34,17 +37,21 @@ knitr:
 
 [下划线]{.underline}
 
-## 链接和图像
+## 链接
 
 <https://quarto.org/docs/get-started/hello/rstudio.html>
 
 [Quarto官网](https://quarto.org/docs/get-started/hello/rstudio.html)
+
+## 图像
 
 ![Quarto工作流](./images/Quarto工作流.png)
 
 # 代码块
 
 可以通过菜单栏Code-Insert Chunk来添加，也可以用快捷键Ctrl+Alt+I
+
+添加Python代码块，可以用快捷键Ctrl+Shift+P,可以通过Tools-Modify keyboard Shortcuts进行
 
 ```{r}
 a <- 3+5
@@ -55,17 +62,133 @@ a
 
 ## 代码块选项
 
-| 代码块选项 | 功能           |
-|------------|----------------|
-| label      | 添加代码块标签 |
-|            |                |
-|            |                |
-|            |                |
-|            |                |
-|            |                |
-|            |                |
-|            |                |
-|            |                |
-|            |                |
+| 代码块选项                     | 功能                                       |
+|-------------------------------|-----------------------------------------|
+| label                          | 添加代码块标签                             |
+| eval: false                    | 阻止代码的运行                             |
+| include: false                 | 运行代码，但不再最终文档中显示代码或结果   |
+| echo: false                    | 阻止代码出现在最终文档中，但结果仍然会显示 |
+| message: false或 warning:false | 阻止消息或者警告消息出现在最终文档中       |
+| result: hide                   | 隐藏结果输出                               |
+| fig-show: hide                 | 隐藏图像                                   |
+| error: true                    | 使渲染过程忽略代码 错误。                  |
+|                                |                                            |
+|                                |                                            |
 
 : 代码块标签
+
+## 全局选项
+
+```         
+title: "Quarto学习手册"
+knitr:
+  opts_chunk:
+    dev: ragg_png
+    dpi: 150
+    comment: "#>"
+    collapse: true
+```
+
+全局选项可以在YAML头部的knitr:opts_chunk:中设置，也可以在代码块中设置， 该设置规定了中文图片使用ragg包处理，`comment`规定了首要注释方式，`collapse: true`确保代码下面紧跟输出
+
+```{r}
+#| comment: "#>"
+#| collapse: true
+print("Hello Quarto")
+print("Fighting!")
+```
+
+## 缓存cache
+
+设置`cache: true`可以保存缓存，如果要清理缓存，可以运行代码`knitr::clean_cache`
+
+# 行内代码
+
+```{r}
+a <- c(3,5,9,1,6,1000)
+```
+
+a向量共有 `r length(a)` 个元素，最大值为 `r max(a)`，最小值为 `r min(a)`，平均值为 `r mean(a)`。
+
+当数值插入文本时，format函数可以用于格式化输出，`r format(mean(a),digits=2)`，保留两位小数。 还可以设置big.mark参数设置千分位分隔符，使数值更易读，例如`r format(max(a),big.mark=",")`
+
+# 图像设置
+
+## 图像选项
+
+| 图像选项    | 功能                                                 |
+|-------------|------------------------------------------------------|
+| fig-width   | 图像 宽度                                            |
+| fig-height  | 图像高度                                             |
+| fig-asp     | 图像高宽比                                           |
+| out-width   | 控制输出大小，并将其设置为输出文档正文的宽度的百分比 |
+| out-height  | 控制输出大小，并将其设置为输出文档正文的高度的百分比 |
+| fig-align   | 图像布局位置                                         |
+| layout-ncol | 图像布局列数                                         |
+| fig-cap     | 添加图像标题                                         |
+| fig-format  | 设置图像格式，默认为PDF格式                          |
+
+: 图像选项
+
+图像示例，设置图像宽度和高宽比
+
+```{r}
+#| label: fig-example
+#| fig-width: 6
+#| fig-asp: 0.618
+#| fig-cap: "这是图像示例"
+library(ggplot2)
+ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point() 
+```
+
+图像示例，设置2列
+
+```{r}
+#| label: fig-example-2
+#| layout-ncol: 2
+#| fig-cap: "图2"
+#| fig-subcap: ["图像1", "图像2"]
+ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point()
+
+ggplot(mtcars, aes(x = cyl)) +
+  geom_bar()
+```
+
+## 图像交叉引用
+
+注意，图像要能实现交叉引用，需要设置label和fig-cap
+
+@fig-example
+
+@fig-example-2
+
+# 表格
+
+## 输出数据框
+
+```{r}
+#| label: tbl-example
+#| tbl-cap: "mtcars数据集前6行"
+knitr::kable(head(mtcars))
+```
+
+如果需要考虑更高级的定制，可以考虑使用gt,huxtable,reactable,kableExtra,xtable,stargazer,pander,tables和ascii等包
+
+@tbl-example
+
+## 表格筛选
+
+```{r}
+library(DT)
+datatable(mtcars,
+          selection = "multiple", #可多选行，改为 "single" 为单选
+          filter = "top", #每列顶部加筛选器：数值列为区间滑块，文本列为下拉搜索
+          extensions = "Buttons"
+          )
+```
+
+
+
+
