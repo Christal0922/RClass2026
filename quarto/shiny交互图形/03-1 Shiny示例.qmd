@@ -1,0 +1,30 @@
+---
+title: "03-1 shiny示例"
+format: html
+server: shiny
+---
+
+# 输入文本或数字
+
+```{r}
+#| context: setup
+library(shiny)
+```
+
+```{r}
+textInput("name","请输入您的姓名: ")
+numericInput("age","请输入您的年龄: ",NA,min = 0,max = 150)
+```
+
+```{r}
+#| context: server
+output$result <- renderText({
+  if (is.na(input$age)) {
+    paste0("姓名：", input$name, "　年龄：未填写")
+  } else {
+    paste0("姓名：", input$name, "　年龄：", input$age, " 岁")
+  }
+})
+verbatimTextOutput("result")
+```
+
