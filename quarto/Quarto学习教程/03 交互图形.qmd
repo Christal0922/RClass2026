@@ -1,0 +1,44 @@
+---
+title: "03 交互图形"
+format: 
+  html:
+    toc: true
+---
+
+# 交互性
+
+## htmlwidgets
+
+html是一种交互式格式，可以利用html组件实现交互式html可视化
+
+| 选项              | 功能                           |
+|-----------------------|--------------------------------|
+| dygraphs                      | 用于交互式时间序列可视化                               |
+| DT                      |  用于交互式表格                              |
+| threejs                      | 用于交互式3D图形                               |
+| DiagrammeR | 用于绘制流程图和简单的节点-链接图等 |
+
+
+## shiny
+
+```
+title: "Shiny Web APP"
+format: html
+server: shiny
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

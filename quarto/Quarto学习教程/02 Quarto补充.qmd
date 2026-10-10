@@ -1,0 +1,76 @@
+---
+title: "02 Quarto"
+format: 
+  html:
+    toc: true
+    code-fold: true
+    code-tools: true
+    embed-resources: true
+  typst: default
+  docx: default
+  revealjs: default
+---
+
+# YAML选项
+
+| YAML选项              | 功能                           |
+|-----------------------|--------------------------------|
+| toc: true             | 包含目录                       |
+| code-fold: true       | 折叠代码块                     |
+| code-tools: true      | 显示代码工具                   |
+| embed-resources: true | 自包含文档（方便分享给其他人） |
+|                       |                                |
+|                       |                                |
+|                       |                                |
+|                       |                                |
+|                       |                                |
+|                       |                                |
+|                       |                                |
+
+: YAML选项
+
+# 代码块
+
+```{r}
+print("hello")
+```
+
+# 渲染多种格式输出
+
+```{r}
+if (!requireNamespace("quarto", quietly = T)) {
+  install.packages('quarto')
+}
+library(quarto)
+```
+
+## 渲染成html格式
+
+```{r}
+#| eval: false
+quarto_render("./02 Quarto补充.qmd",output_format = "html")
+```
+
+revealjs 幻灯片格式
+
+```{r}
+#| eval: false
+quarto_render("./02 Quarto补充.qmd",output_format = "revealjs")
+```
+
+## 渲染成pdf格式
+
+```{r}
+#| eval: false
+quarto_render("./02 Quarto补充.qmd",output_format = "typst")
+```
+
+## 渲染成docx格式
+
+```{r}
+#| eval: false
+quarto_render("./02 Quarto补充.qmd",output_format = "docx")
+```
+
+
+
