@@ -1,0 +1,176 @@
+---
+title: "04 比较数值大小和差异"
+format: 
+  html:
+    toc: true
+    number-sections: true
+    fig-default:
+      dev: ragg-png
+exeute:
+  warning: false
+  message: false
+---
+
+# 准备
+
+## 准备数据
+
+data3_1收集了2000名消费者的网购情况
+```{r}
+data3_1 <- read.csv("../../data/mydata/chap03/data3_1.csv", stringsAsFactors=TRUE)
+data3_2 <- read.csv("../../data/mydata/chap03/data3_2.csv", stringsAsFactors=TRUE)
+```
+
+## 准备包
+```{r}
+#| message: false
+library(tidyverse) # 数据处理和绘图
+library(ggplot2) # 绘图
+library(dplyr)  # 数据处理
+library(tidyr)  # 数据处理 pivot_longer函数
+```
+
+
+#  用条形比较
+
+## 单变量条形图
+
+（1）该调查情况的性别分布情况如何？
+```{r}
+ggplot(data3_1, aes(y=性别)) + 
+  geom_bar(fill="steelblue") +
+  labs(title="消费者性别分布情况", x="性别", y="人数")
+```
+
+(2) 2000名消费者网购原因分布情况？
+```{r}
+ggplot(data3_1, aes(x=网购原因,fill = 网购原因)) + 
+  geom_bar() +
+  labs(title="消费者网购原因分布情况", x="网购原因", y="人数")
+```
+
+（3）2000名消费者网购的满意度人数分布如何？
+```{r}
+#| label: fig-barplot-1
+ggplot(data3_1, aes(x=满意度)) + 
+  geom_bar(fill="steelblue") +
+  labs(title="消费者网购满意度分布情况", x="网购满意度", y="人数")
+```
+
+### 【拓展思考】
+
+1. 如何按照人数进行降序排列
+```{r}
+# 计算按照满意度区分的人数
+data3_1_processed <- data3_1  |> 
+  group_by(满意度) |> 
+  summarise(人数 = n()) |> 
+  mutate(百分比 = 人数/sum(人数)*100)
+data3_1_processed
+```
+
+```{r}
+#| label: fig-barplot-1-降序
+p1 <- ggplot(data3_1_processed, aes(x=reorder(满意度, -人数), y=人数,fill = 满意度)) + 
+  geom_bar(stat="identity") +
+  labs(title="消费者网购满意度分布情况", x="网购满意度", y="人数")
+p1
+```
+
+2. 如何自定义绘图颜色
+```{r}
+#| label: fig-barplot-1-自定义颜色
+p1 +
+  scale_fill_manual(values = c("#E41A1C","#377EB8","#4DAF4A"),
+                    breaks = levels(reorder(data3_1_processed$满意度, -data3_1_processed$人数)))
+```
+
+3. 如何添加数据标签
+
+```{r}
+#| label: fig-barplot-1-添加数据标签
+p1 + geom_text(aes(label=人数), vjust=-0.5, size=3)
+```
+
+方法二：通过geom_bar函数实现
+```{r}
+ggplot(data3_1,aes(x=reorder(满意度, 满意度, FUN = length),fill = 满意度))+
+  geom_bar() +
+  labs(x="网购满意度", y="人数")+
+  scale_x_discrete(limits = rev)+ #把 X 轴顺序整体反转，变成降序
+  scale_fill_manual(values = c("#E41A1C","#377EB8","#4DAF4A"),
+                    breaks = rev(levels(reorder(data3_1$满意度, data3_1$满意度, FUN = length))))+
+  stat_count(aes(label=after_stat(count)), geom="text", vjust=-0.5, size=3)+ # stat_count()函数可以计算每个类别的数量，并将其作为标签添加到条形图上
+  stat_count(aes(label=after_stat(scales::percent(count/sum(count)))), geom="text", vjust=1.5, size=3, col="white") # 添加百分比标签
+```
+
+```{r}
+#| eval: false
+attach(data3_1)
+reorder(满意度, 满意度, FUN = length)
+```
+
+4. 添加频数标签和百分比标签
+
+```{r}
+#| label: fig-barplot-1-添加百分比标签
+p1 + geom_text(aes(label=人数), vjust=-0.5, size=5)+
+  geom_text(aes(label=paste0(百分比,"%")), vjust=1.5, size=5, color="white")+
+  ylim(0,900)
+```
+
+5. 不同性别的网购满意度是否存在差异？
+
+以分面的方式实现，左边为男性，右边为女性
+```{r}
+#| label: fig-barplot-1-分面
+ggplot(data3_1, aes(x=满意度, fill=满意度)) + 
+  geom_bar() +
+  labs(title="消费者网购满意度分布情况", x="网购满意度", y="人数")+
+  facet_wrap(~性别)
+```
+
+```{r}
+data3_1_processed_2 <- data3_1 |>
+  group_by(满意度) |>
+  summarise(人数 = n()) |>
+  mutate(百分比 = 人数/sum(人数)*100,
+         满意度 = reorder(满意度,人数))
+data3_1_processed_2
+```
+
+```{r}
+ggplot(data3_1_processed_2, aes(x=满意度, y=人数, fill=满意度)) + 
+  geom_bar(stat="identity")
+```
+
+
+### 练习1：消费支出data3_2
+
+根据data3_2绘制条形图，该数据集描述了北京、天津、上海、重庆四个城市在不同支出项目的支出情况，请比较各地区各项消费支出的差异，要求按照地区分面绘制水平条形图，并根据支出金额对重新排序，降序排列
+
+提示：tidytext包的reorder_within函数专门为 ggplot 分面 (facet) 设计，在每个分面组内部单独排序
+`reorder_within` 来自 `tidytext`，**必须配套 `scale_y_reordered()` / `scale_x_reordered()` 一起使用**，缺一不可
+```{r}
+if (!requireNamespace("tidytext", quietly = TRUE)) {
+  install.packages("tidytext")
+}
+library(tidytext)
+```
+
+```{r}
+data3_2_processed <- data3_2 |>
+  pivot_longer(cols = 2:5, names_to = "地区", values_to = "支出金额") |> 
+  mutate(支出项目 = reorder_within(支出项目,支出金额,地区))
+data3_2_processed
+```
+
+```{r}
+ggplot(data3_2_processed, aes(y=支出项目, x=支出金额, fill=地区)) + 
+  geom_bar(stat="identity") +
+  labs(title="2023年4个地区居民人均消费支出的分面条形图", y="支出项目", x="支出金额(元)")+
+  facet_wrap(~地区,scales="free_y")+
+  scale_y_reordered()
+```
+
+### 练习2： 从国家数据网下载感兴趣的数据，绘制单变量分面条形图，并说明从图中获取的信息
