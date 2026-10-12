@@ -6,9 +6,11 @@ format:
     number-sections: true
     fig-default:
       dev: ragg-png
+    embed-resources: true
 exeute:
   warning: false
   message: false
+  cache: true
 ---
 
 # 准备
@@ -174,3 +176,188 @@ ggplot(data3_2_processed, aes(y=支出项目, x=支出金额, fill=地区)) +
 ```
 
 ### 练习2： 从国家数据网下载感兴趣的数据，绘制单变量分面条形图，并说明从图中获取的信息
+
+## 多变量条形图
+
+### 并列条形图
+
+（1）不同性别消费者满意度的分布情况如何？
+
+#### 方法1：geom_bar()函数实现
+```{r}
+p2 <- ggplot(data3_1,aes(x = 满意度, fill = 性别)) +
+  geom_bar(position = "dodge") +
+  labs(title="不同性别消费者网购原因的分布情况", x="网购原因", y="人数")
+p2
+```
+
+position = "dodge"表示不同性别的条形图并列显示，position = "stack"表示不同性别的条形图堆叠显示
+
+拓展：添加数据标签
+```{r}
+#| label: fig-barplot-2-并列条形图
+p2 + geom_text(aes(label=after_stat(count)), stat="count", position=position_dodge(width=0.9), vjust=-0.5, size=3)
+```
+
+position = position_dodge(width=0.9)表示不同性别的条形图并列显示，vjust=-0.5表示数据标签在条形图上方显示，size=3表示数据标签的字体大小为3, width=0.9表示条形图的宽度为0.9
+
+#### 方法2: geom_col()函数实现
+拓展：先计算人数，再绘制条形图
+通过data3_1_processed_3计算不同性别消费者网购原因的分布情况的人数，再绘制条形图
+```{r}
+data3_1_processed_3 <- data3_1 |>
+  group_by(满意度, 性别) |>
+  summarise(人数 = n()) 
+data3_1_processed_3
+```
+绘制并列条形图
+```{r}
+ggplot(data3_1_processed_3, aes(x=满意度, y=人数, fill=性别)) + 
+  geom_col(position = "dodge") +
+  labs(title="不同性别消费者网购原因的分布情况", x="网购原因", y="人数")+
+  geom_text(aes(label=人数), position=position_dodge(width=0.9), vjust=-0.5, size=3)
+```
+
+(2) 消费者满意度和网购原因是否相关？（用堆叠图展示）
+```{r}
+#| label: fig-barplot-3-堆叠条形图
+ggplot(data3_1, aes(x=满意度, fill=网购原因)) + 
+  geom_bar(position = "stack") +
+  labs(title="不同满意度消费者的网购原因分布情况", x="网购原因", y="人数")+
+  geom_text(aes(label=after_stat(count)), stat="count", position=position_stack(vjust=0.5), size=3)
+```
+
+拓展：能否以百分比的形式展示不同网购原因的满意度分布情况？
+
+```{r}
+#| label: fig-barplot-3-堆叠百分比条形图
+p_percent <- ggplot(data3_1, aes(x=网购原因, fill=满意度)) + 
+  geom_bar(position = "fill") +
+  labs(title="不同网购原因满意度分布情况", x="网购原因", y="比例")+
+  scale_y_continuous(labels = scales::percent_format())+
+  geom_text(aes(label=scales::percent(after_stat(count/sum(count)))), stat="count", position=position_fill(vjust=0.5), size=3)
+p_percent
+```
+
+拓展，同类连线百分比条形图
+```{r}
+library(tidyverse)
+library(ggalluvial)
+
+# 1. 数据预处理：按【网购原因】分组内归一，每组总和=100%
+data_pct <- data3_1 %>%
+  count(`网购原因`, 满意度, name = "n") %>%
+  group_by(`网购原因`) %>%   # 每个网购原因内部，比例之和=1
+  mutate(pct = n / sum(n)) %>%
+  ungroup()
+
+# 2. 绘制同类连线百分比条形图
+ggplot(data_pct,
+       aes(y = pct,
+           axis1 = `网购原因`,   # 左轴：网购原因（3根100%竖条）
+           axis2 = 满意度)) +    # 右轴：满意度
+  geom_flow(
+    aes(fill = 满意度),
+    stat = "flow",
+    width = 0.3,
+    curve_type = "xspline",
+    knot.pos = 0.25,
+    alpha = 0.7
+  ) +
+  geom_stratum(aes(fill = after_stat(stratum)), width = 0.3, color = "black") +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 3.2) +
+  scale_x_discrete(
+    limits = c("网购原因","满意度"),
+    expand = c(0,0)
+  ) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_fill_manual(values = c("不满意"="#f06050","满意"="#00b840","中立"="#5088f0")) + # 和你原图配色保持一致
+  labs(
+    x = "",
+    y = "比例",
+    fill = "满意度",
+    title = "不同网购原因满意度分布情况（同类连线百分比条形图）"
+  ) +
+  theme_minimal()
+
+```
+
+
+
+## 条形图变形
+
+### 不等宽百分比条形图
+```{r}
+#| message: false
+#| warning: false
+#| collapse: true
+#| fig-asp: 0.85
+library(ggiraphExtra)
+require(ggplot2)
+library(RColorBrewer)
+p <- ggSpine(data3_1,
+  aes(x = 满意度, fill = 网购原因, facet = 性别),
+  palette = "Reds", labelsize = 3, reverse = TRUE
+)
+
+p + theme(
+  plot.margin = margin(t = 10, r = 10, b = 25, l = 10)
+)
+```
+
+### 冲击图(Alluvial Diagram)
+
+有时候也称为桑基图（Sankey Diagram），主要用于展示不同类别之间的流动关系，适合展示多变量之间的关系。
+```{r}
+library(tidyverse)
+library(ggalluvial)
+
+# 双轴：axis1=性别，axis2=满意度，删掉axis3
+ggplot(data3_1,
+       aes(y = 1, # y=1，stat_flow会自动计数样本数量
+           axis1 = 性别,
+           axis2 = 满意度)) + 
+  geom_flow(aes(fill = 满意度), 
+            width = 0.3, curve_type = "xspline", alpha = 0.7) +
+  geom_stratum(width = 0.3, fill="white", color="black") +
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size=3.2) +
+  scale_x_discrete(limits = c("性别","满意度"), expand = c(0.05,0.05)) +
+  labs(x="", y="样本数量", fill="满意度", title="性别-满意度 双轴冲积图") +
+  theme_minimal()
+```
+
+3轴
+```{r}
+#| label: fig-barplot-3-堆叠百分比条形图连线
+library(tidyverse)
+library(ggalluvial)
+
+# 绘制冲积图（ggalluvial）
+ggplot(data3_1,
+       aes(y = 1,  # y=1，stat_flow会自动计数样本数量
+           axis1 = 性别,
+           axis2 = 满意度,
+           axis3 = 网购原因)) +
+  # 彩带：geom_flow，填充映射可以选性别，或者满意度，看你想突出哪一类
+  geom_flow(aes(fill = 满意度), 
+            width = 0.3, curve_type = "xspline", alpha = 0.7) +
+  # 分层矩形块
+  geom_stratum(width = 0.3, fill="white", color="black") +
+  # 在矩形块上写类别文字
+  geom_text(stat = "stratum", aes(label = after_stat(stratum)), size=3.2) +
+  # X轴三个阶段命名
+  scale_x_discrete(limits = c("性别","满意度","网购原因"), expand = c(0.05,0.05)) +
+  labs(x="", y="样本数量", fill="满意度", title="性别-网购原因-满意度 冲积图") +
+  theme_minimal()
+```
+
+## 消费支出案例
+
+```{r}
+data3_2_processed_2 <- data3_2 |> 
+  pivot_longer(cols = 2:5, names_to = "地区", values_to = "支出金额") |> 
+  group_by(地区, 支出项目) |>
+  summarise()
+```
+
+
