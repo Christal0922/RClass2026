@@ -355,9 +355,174 @@ ggplot(data3_1,
 
 ```{r}
 data3_2_processed_2 <- data3_2 |> 
-  pivot_longer(cols = 2:5, names_to = "地区", values_to = "支出金额") |> 
-  group_by(地区, 支出项目) |>
-  summarise()
+  pivot_longer(cols = 2:5, names_to = "地区", values_to = "支出金额")
+data3_2_processed_2
 ```
+
+### (1) 北京市居民人均消费支出情况
+
+```{r}
+#| label: fig-barplot-1-北京支出项目
+ggplot(data3_2,aes(x=北京,y=支出项目))+
+  geom_col()
+```
+
+拓展： 按照支出金额从高到低排列？
+```{r}
+#| label: fig-barplot-1-北京支出项目排序
+p_beijing <- ggplot(data3_2,aes(x=北京,y=reorder(支出项目,北京)))+
+  geom_col() +
+  labs(title = "北京市居民人均消费支出情况", x="支出金额(元)", y="支出项目")
+p_beijing 
+```
+
+### (2) 北京市居民人均消费支出情况，按照支出金额从高到低排列，并添加数据标签
+```{r}
+#| label: fig-barplot-1-北京支出项目排序添加数据标签
+p_beijing + geom_text(aes(label=北京), hjust=-0.1, size=3)
+```
+
+### (3) 展现北京市、重庆市居民人均消费支出情况
+
+```{r}
+#| label: fig-barplot-2-北京-并列条形图
+mycity <- c("北京","重庆")
+data3_2_processed_2 |> 
+  filter(地区 %in% mycity) |>
+  ggplot(aes(x=支出金额, y=reorder(支出项目,支出金额),fill=地区)) + 
+    geom_col(position = "dodge")+
+    labs(title="北京市和重庆市居民人均消费支出情况",  x="支出金额(元)",y=NULL)
+```
+
+### (4) 以堆叠图的形式展现四个城市的消费支出情况，x轴地区,y轴为支出金额，颜色填充依据为支出项目
+```{r}
+#| label: fig-barplot-2-北京-堆叠条形图
+library(RColorBrewer)
+data3_2_processed_2 |> 
+  ggplot(aes(x=地区, y=支出金额, fill=支出项目)) +
+  geom_col(colour = "grey40")+
+  scale_fill_brewer(palette = "Blues")
+```
+
+### (5) 以百分比条形图的形式展现四个城市的消费支出情况，x轴为地区，y轴为支出项目支出金额占比，颜色填充依据为支出项目
+```{r}
+#| label: fig-barplot-2-北京-百分比堆形图
+data3_2_processed_2 |> 
+  ggplot(aes(x=地区, y=支出金额, fill=支出项目)) +
+  geom_col(colour = "grey40",position = "fill")+
+  scale_fill_brewer(palette = "Blues") +
+  scale_y_continuous(labels = scales::percent_format()) 
+```
+
+### (6) 以堆叠条形图的形式展现四个城市的消费支出情况，x轴为地区，y轴为支出项目支出金额，颜色填充依据为支出项目，并添加数据标签
+
+```{r}
+#| label: fig-barplot-2-北京-百分比堆形图添加数据标签
+data3_2_processed_2 |>
+  group_by(地区) |>
+  mutate(pct = scales::percent(支出金额 / sum(支出金额),accuracy = 0.1)) |> 
+  ungroup() |> 
+  ggplot(aes(x=地区, y=支出金额, fill=支出项目)) +
+  geom_col(colour = "grey40",position = "fill") +
+  scale_fill_brewer(palette = "Blues") +
+  geom_text(aes(label = pct), position = position_fill(vjust = 0.5), size=3) +
+  scale_y_continuous(labels = scales::percent) 
+```
+
+#### 方法2：通过ggstats包
+
+包的安装
+```{r}
+#| eval: false
+install.packages("ggstats", repos = "https://mirrors.tuna.tsinghua.edu.cn/CRAN/")
+```
+
+```{r}
+library(ggstats) # 使用geom_prop_bar()函数绘制百分比条形图
+ggplot(data3_2_processed_2, aes(x=地区, fill=支出项目,
+                                weight = 支出金额, by = 地区)) +
+  geom_prop_bar(position = "fill", color = "white")+ 
+  geom_prop_text(size=3)+
+  scale_fill_brewer(palette = "Spectral") +
+  scale_y_continuous(labels = scales:: percent) +
+  labs(title="北京市、天津市、上海市、重庆市居民人均消费支出情况", x="地区", y="支出金额占比")
+```
+
+#### 方法3：通过ggalluvial包实现，并绘制冲积图
+
+##### 普通百分比条形图
+
+```{r}
+data3_2_processed_3 <- data3_2_processed_2 |>
+  group_by(地区) |>
+  mutate(pct = 支出金额 / sum(支出金额)) |> 
+  ungroup()
+data3_2_processed_3
+```
+
+```{r}
+library(ggalluvial)
+p_p <- ggplot(data3_2_processed_3,
+       aes(x = 地区,y = pct, fill = 支出项目))+
+  geom_bar(stat = "identity", position = "fill", color = "white") +
+  scale_fill_brewer(palette = "Spectral") +
+  scale_y_continuous(labels = scales::percent)
+p_p
+```
+
+##### 同类连线冲击图
+
+```{r}
+library(ggalluvial)
+ggplot(data3_2_processed_3) + 
+  aes(x=地区,
+      y=pct,        # y 轴映射 pct：事先算好的各类支出占比（0~1）
+      fill = 支出项目,
+      stratum = 支出项目,          # ggalluvial 专有：地层分组，决定每个地区的柱体如何被切成堆叠块
+      alluvium = 支出项目) +      # ggalluvial 专有：冲积带分组，决定哪些块由同一条流带贯穿连接
+  geom_col(width = 0.7,  color = "white",linewidth = 0.8)+ # 绘制柱状图
+  geom_flow(width = 0.7,  # 流带在轴位置处的宽度，必须与 geom_col 的 width 一致，否则错位
+            alpha = 0.5,        # geom_flow()：ggalluvial 提供，绘制相邻地区之间连接同一支出项目的流动带（连线）
+            knot.pos = 0,            # knot.pos 表示中间连线的弯曲程度，0表示直线，1表示最大弯曲
+            color = "white",
+            linewidth = 0.8)+
+  scale_fill_brewer(palette = "Spectral") +
+  scale_y_continuous(labels = scales::percent)+
+  labs(title="北京市、天津市、上海市、重庆市居民人均消费支出情况-冲击图", 
+       x="地区", y="百分比(%)")
+```
+
+#### 方法4： 以不等宽条形图展现四个城市的居民消费支出情况
+```{r}
+#| message: false
+if (!requireNamespace("ggiraphExtra", quietly = TRUE)) {
+  install.packages("ggiraphExtra")
+}
+```
+
+
+```{r}
+library(ggiraphExtra)
+ggSpine(data3_2_processed_3,aes(x= 地区, y= pct,fill = 支出项目),
+        stat = "identity",palette = "Spectral", labelsize = 3,
+        hide.legend = F, #显示图例
+        minlabel = 5 # 单个块占该地区比例 < 5% 时不显示标签
+        ) +
+  labs(y = "支出金额占比(%)")
+```
+
+### （7）以极坐标图展现北京的各个支出项目的居民消费支出情况
+
+```{r}
+data3_2 |> mutate(支出项目=reorder(支出项目,北京)) |> 
+  ggplot(aes(x=支出项目,y=北京,fill=支出项目))+
+  geom_col()+
+  coord_radial(theta = "x",
+              inner.radius = 0.1, #设置内径
+              rotate.angle = TRUE)+
+  labs(title="北京市居民人均消费支出情况", x="支出项目", y="支出金额(元)")+
+  scale_fill_brewer(palette = "Spectral")
+```
+
 
 
