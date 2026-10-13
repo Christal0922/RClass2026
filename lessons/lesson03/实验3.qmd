@@ -84,13 +84,13 @@ library(tidyr)
 
 ## 任务一：模拟记录、保存 CSV 
 
-APP_m_time存储了24名学生在不同APP的使用时长数据，为保护隐私，该数据框为模拟数据，请根据要求完成以下操作。
+app_data存储了24名学生在不同APP的使用时长数据，为保护隐私，该数据框为模拟数据，请根据要求完成以下操作。
 
 (1) 读取实验3.RData数据
 ```{r}
 load("D:/Project/Rproject/RClass2026/lessons/lesson03/实验3.RData")
 ```
-(2) 设置随机种子为2026，在数据框APP_m_time后面添加一列，列名为游戏，值为0-100之间的随机数
+(2) 设置随机种子为2026，在数据框app_data后面添加一列，列名为游戏，值为0-100之间的随机数
 ```{r}
 set.seed(2026)
 app_data$游戏 <- round(runif(nrow(app_data), min = 10, max = 100))
@@ -189,7 +189,7 @@ App_summary
 
 ## 任务四：保存分析结果，并读取 RData
 
-保存处理后的App_data,App_long,App_summary数据框，保存为 App_summary.RData
+保存处理后的app_data,app_long,App_summary数据框，保存为 App_summary.RData
 
 ```{r}
 
