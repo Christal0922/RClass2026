@@ -1,0 +1,243 @@
+---
+title: "04 比较数值大小和差异-2"
+format: 
+  html:
+    theme: cosmo
+    toc: true
+    number-sections: true
+    fig-default:
+      dev: ragg-png
+exeute:
+  warning: false
+  message: false
+---
+
+# 学习目标
+
++ 掌握单变量条形图的绘制方法
+
++ 掌握并列条形图的绘制方法
+
++ 掌握堆叠条形图的绘制方法
+
++ 掌握百分比条形图的绘制方法
+
+# 准备
+
+## 数据准备
+```{r}
+load("./chapter04.RData")
+```
+
+```{r}
+#| eval: false
+data3_1 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_1.csv")
+data3_2 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_2.csv")
+data3_3 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_3.csv")
+data3_4 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_4.csv")
+data3_5 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_5.csv")
+```
+
+```{r}
+save(data3_1,data3_2,data3_3,data3_4,data3_5,
+     file = "./chapter04.RData")
+```
+
+### data3_2_long,将宽数据变为长数据
+```{r}
+library(tidyr)
+data3_2_long <- data3_2 |> 
+  pivot_longer(
+    cols = 2:5,
+    names_to = "地区",
+    values_to = "支出金额"
+  )
+```
+
+
+## 包的准备
+```{r}
+#| message: false
+library(tidyverse)
+library(ggplot2)
+```
+
+矩形树状图 treemapify
+```{r}
+if (!requireNamespace("treemapify")) install.packages("treemapify")
+library(treemapify)
+```
+设置调色板 RColorBrewer
+```{r}
+if (!requireNamespace("RColorBrewer")) install.packages("RColorBrewer")
+library(RColorBrewer)
+```
+
+
+## 回顾ggplot2语法
+
+```
+library(ggplot2)
+ggplot(数据,aes(x,y,fill,color,...))+
+  geom_XX() 
+```
+
+# 用条形比较
+
+# 用矩形比较
+
+## 矩形树状图
+
+### 案例1：居民人均消费支出
+
+```{r}
+library(treemapify)
+p_treemap <- ggplot(data3_2_long, aes(
+  area = 支出金额, fill = 地区,       #设置区域变量和填充变量
+  subgroup = 地区, label = 支出项目   #设置亚组和标签
+)) +
+  geom_treemap(color = "white")+      # 设置区域分割线颜色
+  geom_treemap_subgroup_border(color = "white", size = 5)+ #设置亚组边线颜色和线宽
+  geom_treemap_text(place = "middle") # 设置标签文本位置
+p_treemap
+```
+
+自定义调色板
+```{r}
+library(RColorBrewer)
+p_treemap + scale_fill_brewer(palette = "Set2") +
+  ggtitle("4个地区的消费支出情况")
+```
+
+### 案例2：网购调查情况
+
+```{r}
+data3_1_cal <- data3_1 |> 
+  summarise(人数 = n(),.by = c(性别, 网购原因,满意度)) # 根据性别和满意度计算人数
+```
+
+
+```{r}
+ggplot(data3_1_cal,aes(
+  area = 人数, subgroup = 性别, subgroup2 = 网购原因,
+  fill = 性别, label = 满意度
+)) +
+  geom_treemap(color = "white") +
+  geom_treemap_subgroup_border(color = "white",size = 6)+
+  geom_treemap_subgroup2_border(color = "white",size = 3)+
+  geom_treemap_text(place = "middle")+
+  geom_treemap_subgroup2_text(place = "topleft",size = 14,
+                              color = "white")
+```
+
+# 用圆或点比较
+
+## 圆堆图
+
+准备数据
+```{r}
+data3_3_cal <- data3_3 |> 
+  summarise(GDP=sum(地区生产总值),.by = c(地带划分,地区))
+```
+
+准备包
+```{r}
+# 实现从github下载包
+if (!requireNamespace("remotes")) install.packages("remotes")
+library(remotes)
+```
+从github下载圆锥图相关的包
+```{r}
+#| eval: false
+remotes::install_github("EvaMaeRey/ggcirclepack")
+```
+绘图
+```{r}
+#| message: false
+#| warning: false
+library(ggcirclepack)
+ggplot(data3_3,aes(id=地区,area=地区生产总值,fill = 地区))+
+  geom_circlepack(show.legend = FALSE, color = "grey")+ #设置边线颜色
+  geom_circlepack_text(show.legend = FALSE) + # 绘制标签
+  coord_equal()
+```
+根据地带划分分面
+```{r}
+#| message: false
+#| warning: false
+ggplot(data3_3,aes(id=地区,area=地区生产总值,fill = 地带划分))+
+  geom_circlepack(show.legend = FALSE, color = "grey")+
+  geom_circlepack_text(show.legend = FALSE) +
+  coord_equal()+
+  facet_grid(~地带划分)
+```
+
+## 气泡图
+```{r}
+data3_2_long |> filter(地区=="北京") |> 
+ggplot(aes(x=支出金额,y=支出项目))+
+  geom_point(aes(size = 支出金额),color = "steelblue")+
+  scale_size(range = c(1,15))
+```
+
+# 用颜色饱和度比较
+
+## 热图
+
+## 案例1：支出金额
+```{r}
+ggplot(data3_2_long,aes(x=地区,y=支出项目,fill = 支出金额))+
+  geom_tile(color="white")+
+  geom_text(aes(label = 支出金额))+
+  scale_fill_continuous(low="#FEE5D9",high="#EF3B2C")
+```
+
+
+### 案例2：网购情况
+
+```{r}
+p1 <- data3_1 |> summarise(人数=n(),.by = c(满意度,网购原因)) |> 
+ggplot(aes(x=满意度,y=网购原因,fill = 人数))+
+  geom_tile(color = "grey50")+
+  geom_text(aes(label = 人数)) +
+  scale_fill_continuous(low="#FEE5D9",high="#EF3B2C")+
+  coord_fixed() #设置x轴与y轴的比例相等
+p1
+```
+
+转换为极坐标热图
+```{r}
+p1+coord_polar()
+```
+
+# 其他比较方法
+
+## 克利夫兰点图
+```{r}
+data3_3_cal2 <- data3_3 |> 
+  summarise(GDP=sum(地区生产总值),.by = 地区) |> 
+  mutate(地区=reorder(地区,GDP),
+         p_col=ifelse(GDP>=mean(GDP),"red","blue"),
+         p_size=ifelse(GDP>100000,4,2))
+```
+
+```{r}
+data3_3_cal2 |> 
+  ggplot(aes(x=GDP,y=地区))+
+  geom_point(aes(size = p_size))
+```
+
+## 棒棒糖图
+
+
+## 哑铃图
+
+
+## 词云图
+
+
+
+
+
+
+
