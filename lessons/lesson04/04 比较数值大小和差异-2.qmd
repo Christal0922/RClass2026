@@ -2,25 +2,32 @@
 title: "04 比较数值大小和差异-2"
 format: 
   html:
-    theme: cosmo
+    theme: 
+      light: flatly
+      dark: darkly
     toc: true
     number-sections: true
-    fig-default:
-      dev: ragg-png
-exeute:
+  typst:
+    number-sections: true
+execute:
   warning: false
   message: false
+knitr:
+  opts_chunk:
+    dev: ragg_png
 ---
 
 # 学习目标
 
-+ 掌握单变量条形图的绘制方法
++ 能绘制简单条形图，并调整图形参数
 
-+ 掌握并列条形图的绘制方法
++ 能绘制多变量条形图，包括并列条形图、堆叠条形图和百分比条形图
 
-+ 掌握堆叠条形图的绘制方法
++ 能绘制矩形树状图并调整相关参数
 
-+ 掌握百分比条形图的绘制方法
++ 能绘制气泡图并调整相关参数
+
++ 能绘制词云图
 
 # 准备
 
@@ -30,16 +37,7 @@ load("./chapter04.RData")
 ```
 
 ```{r}
-#| eval: false
-data3_1 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_1.csv")
-data3_2 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_2.csv")
-data3_3 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_3.csv")
-data3_4 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_4.csv")
-data3_5 <- read.csv("D:/Project/Rproject/RClass2026/data/mydata/chap03/data3_5.csv")
-```
-
-```{r}
-save(data3_1,data3_2,data3_3,data3_4,data3_5,
+save(data2_1,data3_1,data3_2,data3_3,data3_4,gdp,
      file = "./chapter04.RData")
 ```
 
@@ -52,6 +50,9 @@ data3_2_long <- data3_2 |>
     names_to = "地区",
     values_to = "支出金额"
   )
+```
+```{r}
+
 ```
 
 
@@ -216,28 +217,212 @@ p1+coord_polar()
 ```{r}
 data3_3_cal2 <- data3_3 |> 
   summarise(GDP=sum(地区生产总值),.by = 地区) |> 
-  mutate(地区=reorder(地区,GDP),
-         p_col=ifelse(GDP>=mean(GDP),"red","blue"),
-         p_size=ifelse(GDP>100000,4,2))
+  mutate(地区=reorder(地区,GDP),         
+         mean_GDP = mean(GDP),
+         p_col=ifelse(GDP>=mean_GDP,"red","blue"),
+         p_size=ifelse(GDP>100000,4,2),
+         l_width=ifelse(GDP>100000,1,0.5))
 ```
 
 ```{r}
+#| fig-asp: 1.4
+#| fig-width: 5
 data3_3_cal2 |> 
   ggplot(aes(x=GDP,y=地区))+
-  geom_point(aes(size = p_size))
+  geom_point(aes(color = p_col,size = p_size))+
+  geom_segment(aes(y=地区,yend=地区,
+                   x=mean_GDP,xend = GDP,
+                   color = p_col,
+                   linewidth = l_width))+
+  scale_color_identity()+
+  scale_size_identity()+
+  scale_linewidth_identity()+
+  geom_vline(aes(xintercept = mean_GDP), color = "grey50", linewidth = 0.5)+
+  labs(title = "2023年各地区的地区生产总值的克利夫兰点图")
 ```
 
 ## 棒棒糖图
 
+安装ggalt包
+```{r}
+#| fig-asp: 0.5
+#| fig-width: 10
+data3_3_cal2 |> 
+  ggplot(aes(x=地区,y=GDP))+
+  geom_point(aes(color=GDP))+
+  geom_segment(aes(x=地区,xend = 地区,y=0,yend = GDP,color=GDP))+
+  geom_hline(aes(yintercept = mean_GDP),color = "red",linetype = 2)+
+  theme(axis.text.x = element_text(size = 7.7))+
+  scale_color_continuous(type = "viridis", direction = -1)+
+  labs(y="地区生产总值",
+       title = "2023年各地区的地区生产总值的棒棒糖图")
+```
+
+极坐标棒棒糖图
+```{r}
+data3_3_cal2 |> 
+  ggplot(aes(x=地区,y=GDP))+
+  geom_point(aes(color=GDP))+
+  geom_segment(aes(x=地区,xend = 地区,y=0,yend = GDP,color=GDP))+
+  geom_hline(aes(yintercept = mean_GDP),color = "red",linetype = 2)+
+  theme(axis.text.x = element_text(size = 7.7))+
+  scale_color_continuous(type = "viridis", direction = -1)+
+  labs(y="地区生产总值",
+       title = "2023年各地区的地区生产总值的棒棒糖图")+
+  coord_polar()
+```
 
 ## 哑铃图
+
+数据准备
+```{r}
+#| eval: false
+gdp <- read_excel("./分省年度数据-地区生产总值-最近10年.xlsx",range = "A4:H35")
+gdp <- gdp |> 
+  mutate(across(2:8,as.numeric)) |> 
+  rename(GDP_2025 = `2025年`,
+         GDP_2024 = `2024年`,
+         GDP_2023 = `2023年`,
+         GDP_2022 = `2022年`,
+         GDP_2021 = `2021年`,
+         GDP_2020 = `2020年`,
+         GDP_2019 = `2019年`) |> 
+  select(1,2,8) |> 
+  pivot_longer(
+    cols = 2:3,
+    names_to = "年份",
+    values_to = "GDP_value"
+  )
+```
+
+绘图
+```{r}
+#| fig-asp: 0.618
+#| fig-width: 8
+ggplot(gdp,aes(x=GDP_value,y=reorder(地区,GDP_value),fill = 年份))+
+  geom_line(aes(group = 地区),linewidth = 0.8, colour = "grey50") + #绘制哑铃线
+  geom_point(shape = 21,size = 2)+
+  labs(y="地区",
+       title = "2019年和2025年各地区的地区生产总值的哑铃图")+
+  guides(fill=guide_legend(title = NULL))+      #去除图例标题
+  theme(legend.position = c(0.9,0.1), #设置图例位置
+        legend.background = element_blank())  # 去除图例背景
+```
 
 
 ## 词云图
 
+准备包 ggwordcloud
+```{r}
+#| eval: false
+install.packages("ggwordcloud")
+```
+
+绘图
+```{r}
+library(ggwordcloud)
+set.seed(12)
+ggplot(data3_4,aes(label=词,size = 词频))+
+  geom_text_wordcloud(shape = "star",area_corr = T,colour = "steelblue")+
+  scale_radius(range = c(1,25),limits = c(0,NA))
+```
+
+彩色
+```{r}
+set.seed(12)
+ggplot(data3_4,aes(
+  label=词,size = 词频,
+  colour = factor(sample.int(10,nrow(data3_4),replace = T))
+  ))+
+  geom_text_wordcloud(shape = "circle",area_corr = T)+
+  scale_radius(range = c(1,25),limits = c(0,NA))
+```
+
+自选图形
+
+使用ggwordcloud包内部的图片
+```{r}
+set.seed(12)
+ggplot(data3_4,aes(label=词,size = 词频,color=词频))+
+  geom_text_wordcloud(shape = "star",area_corr = F,
+                      mask = png::readPNG(system.file("extdata/hearth.png",package = "ggwordcloud",mustWork = T)),rm_outside = T)+
+  scale_radius(range = c(0,20),limits = c(0,NA))+
+  scale_color_gradient(low = "red3",high = "red")
+```
+
+使用自选图片
+```{r}
+#| fig-width: 8
+set.seed(12)
+ggplot(data3_4,aes(label=词,size = 词频,color=词频))+
+  geom_text_wordcloud(
+                      mask = png::readPNG("./arrow.png"),rm_outside = T)+
+  scale_radius(range = c(0,20),limits = c(0,NA))+
+  scale_color_gradient(low = "red3",high = "red")
+```
+
+# 在条形图上添加推断信息
+
+## 简单条形图+误差棒
+将宽数据变换为长数据
+```{r}
+data2_1_long <- data2_1 |> pivot_longer(
+  cols = 3:4,
+  names_to = "课程",
+  values_to = "分数"
+)
+```
+计算统计量
+```{r}
+data2_1_calc <- data2_1_long |> 
+  group_by(课程) |> 
+  summarise(
+    n=n(),
+    mean_分数=mean(分数),
+    sd_分数=sd(分数),
+    se_分数=sd_分数/sqrt(n)
+  )
+```
+
+绘图，通过geom_errorbar添加误差棒
+```{r}
+ggplot(data2_1_calc,aes(x=课程,y=mean_分数,fill = 课程))+
+  geom_col()+
+  geom_errorbar(aes(ymin = mean_分数-sd_分数,ymax = mean_分数+sd_分数),
+                width = 0.5, linewidth = 1.2)
+```
+
+## 并列条形图+误差棒
+
+```{r}
+data2_1_calc2 <- data2_1_long |> 
+  group_by(性别,课程) |> 
+  summarise(
+    n=n(),
+    mean_分数=mean(分数),
+    sd_分数=sd(分数),
+    se_分数=sd_分数/sqrt(n)
+  )
+```
+
+```{r}
+ggplot(data2_1_calc2,aes(x=课程,y=mean_分数,fill = 性别))+
+  geom_col(position = "dodge")+
+  geom_errorbar(aes(ymin = mean_分数-sd_分数,ymax = mean_分数+sd_分数),
+                width = 0.3, linewidth = 1.2,
+                position = position_dodge(0.9))
+```
+
+## 简单条形图+检验信息
+
+```{r}
+
+  
+```
 
 
-
-
-
+```{r}
+#| eval: false
+quarto::quarto_render("./04 比较数值大小和差异-2.qmd",output_format = "typst")
+```
 
